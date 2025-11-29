@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Legend, LineChart, Line
+  BarChart, Bar, Legend
 } from 'recharts';
 import { MonthlyData } from '../types';
 
@@ -25,6 +25,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// Common axis styles
+const axisStyle = { fontSize: 12, fill: '#94a3b8' };
+
 export const TrafficChart: React.FC<ChartProps> = ({ data }) => {
   return (
     <div className="h-[250px] w-full">
@@ -38,8 +41,8 @@ export const TrafficChart: React.FC<ChartProps> = ({ data }) => {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="month" stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+          <XAxis dataKey="month" stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
+          <YAxis stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} />
           <Area 
             type="monotone" 
@@ -49,6 +52,7 @@ export const TrafficChart: React.FC<ChartProps> = ({ data }) => {
             fillOpacity={1} 
             fill="url(#colorTraffic)" 
             name="Visitors"
+            activeDot={{ r: 6 }}
           />
         </AreaChart>
       </ResponsiveContainer>
@@ -63,10 +67,10 @@ export const VideosChart: React.FC<ChartProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="month" stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+          <XAxis dataKey="month" stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
+          <YAxis stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={{fill: '#334155', opacity: 0.2}} />
-          <Bar dataKey="benchmarkVideos" name="Videos" fill="#fbbf24" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="benchmarkVideos" name="Videos" fill="#fbbf24" radius={[4, 4, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -80,10 +84,10 @@ export const NewslettersChart: React.FC<ChartProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="month" stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} allowDecimals={false} />
+          <XAxis dataKey="month" stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
+          <YAxis stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} cursor={{fill: '#334155', opacity: 0.2}} />
-          <Bar dataKey="newsletters" name="Newsletters" fill="#fde047" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="newsletters" name="Newsletters" fill="#fde047" radius={[4, 4, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -97,10 +101,10 @@ export const BlogsChart: React.FC<ChartProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="month" stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} allowDecimals={false} />
+          <XAxis dataKey="month" stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
+          <YAxis stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip content={<CustomTooltip />} cursor={{fill: '#334155', opacity: 0.2}} />
-          <Bar dataKey="blogs" name="Blogs" fill="#fdba74" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="blogs" name="Blogs" fill="#fdba74" radius={[4, 4, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -121,13 +125,13 @@ export const CampaignPerformanceChart: React.FC<ChartProps> = ({ data }) => {
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={formattedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="month" stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
-          <YAxis stroke="#94a3b8" tick={{fontSize: 12}} tickLine={false} axisLine={false} />
+          <XAxis dataKey="month" stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
+          <YAxis stroke="#94a3b8" tick={axisStyle} tickLine={false} axisLine={false} />
           <Tooltip content={<CustomTooltip />} cursor={{fill: '#334155', opacity: 0.2}} />
           <Legend wrapperStyle={{paddingTop: '10px'}} />
-          <Bar dataKey="Email" stackId="a" fill="#c2410c" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="LinkedIn" stackId="a" fill="#ea580c" radius={[0, 0, 0, 0]} />
-          <Bar dataKey="Other" stackId="a" fill="#fb923c" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="Email" stackId="a" fill="#c2410c" radius={[0, 0, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
+          <Bar dataKey="LinkedIn" stackId="a" fill="#ea580c" radius={[0, 0, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
+          <Bar dataKey="Other" stackId="a" fill="#fb923c" radius={[4, 4, 0, 0]} barSize={data.length === 1 ? 60 : undefined} />
         </BarChart>
       </ResponsiveContainer>
     </div>

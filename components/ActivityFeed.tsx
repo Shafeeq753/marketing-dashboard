@@ -7,7 +7,7 @@ interface ActivityFeedProps {
 }
 
 export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data }) => {
-  // Create a reversed copy of the data to show latest first (Nov -> July)
+  // Create a reversed copy of the data to show latest first within the selected period
   const reversedData = [...data].reverse();
 
   return (
@@ -18,7 +18,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data }) => {
       </h3>
       
       <div className="relative border-l border-slate-700 ml-3 space-y-8">
-        {reversedData.map((month, idx) => {
+        {reversedData.length > 0 ? reversedData.map((month, idx) => {
           const hasActivities = month.activities.length > 0 && month.activities[0] !== '-';
           
           return (
@@ -42,7 +42,9 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data }) => {
               )}
             </div>
           );
-        })}
+        }) : (
+          <div className="ml-6 text-slate-500 italic">No activities found for this period.</div>
+        )}
       </div>
     </div>
   );
