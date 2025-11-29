@@ -3,7 +3,7 @@ import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: string | number | React.ReactNode;
   subValue?: string;
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
@@ -40,8 +40,8 @@ export const StatCard: React.FC<StatCardProps> = ({
       </div>
       <h3 className="text-slate-400 text-sm font-medium mb-1">{title}</h3>
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold text-white">{value}</span>
-        {subValue && <span className="text-xs text-slate-500">{subValue}</span>}
+        <div className="text-2xl font-bold text-white w-full">{value}</div>
+        {subValue && <span className="text-xs text-slate-500 whitespace-nowrap">{subValue}</span>}
       </div>
     </div>
   );

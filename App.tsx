@@ -50,7 +50,7 @@ type PeriodType = 'quarter' | 'month';
 const App: React.FC = () => {
   // State
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
-  const [selectedValue, setSelectedValue] = useState<string>('Oct'); // Default to Oct to show the fix
+  const [selectedValue, setSelectedValue] = useState<string>('Oct'); // Default to Oct
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Derived Lists
@@ -72,8 +72,6 @@ const App: React.FC = () => {
   }, [currentDataList]);
 
   // Chart Data Logic (Contextual)
-  // Fix: If a month is selected, show [Previous Month, Current Month].
-  // This ensures the graph line ends exactly on the selected month's value, matching the KPI.
   const chartDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
       return currentDataList;
@@ -88,7 +86,7 @@ const App: React.FC = () => {
     }
   }, [currentDataList, selectedPeriodType, selectedValue]);
 
-  // Comparison Logic (Always compare to previous period if available)
+  // Comparison Logic (Default to Previous Period)
   const prevAggregates = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
       // Find previous quarter index
@@ -122,9 +120,7 @@ const App: React.FC = () => {
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
   const blogTrend = calculateTrend(currentAggregates.blogs, prevAggregates?.blogs);
   
-  const currentCampaigns = currentAggregates.campaigns.email + currentAggregates.campaigns.linkedin + currentAggregates.campaigns.other;
-  const prevCampaigns = prevAggregates ? (prevAggregates.campaigns.email + prevAggregates.campaigns.linkedin + prevAggregates.campaigns.other) : 0;
-  const campaignTrend = calculateTrend(currentCampaigns, prevAggregates ? prevCampaigns : null);
+  // Note: Campaign trend is removed for the split view as per user request to show E/L separately
 
   const handleSidebarClick = (type: PeriodType, value: string) => {
     setSelectedPeriodType(type);
@@ -218,7 +214,7 @@ const App: React.FC = () => {
 
       {/* Main Content */}
       <main className={`flex-1 ${isSidebarCollapsed ? 'md:ml-20' : 'md:ml-64'} p-4 md:p-8 overflow-x-hidden transition-all duration-300`}>
-        <div className="max-w-7xl mx-auto space-y-8">
+        <div className="w-full space-y-8">
           
           {/* Header */}
           <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
@@ -270,12 +266,22 @@ const App: React.FC = () => {
             />
             <StatCard 
               title="Campaigns"
-              value={currentCampaigns.toLocaleString()} 
-              subValue={prevAggregates ? `vs ${prevCampaigns.toLocaleString()}` : undefined}
+              value={
+                <div className="flex items-center gap-4 mt-1">
+                   <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-0.5">Emails (E)</span>
+                      <span className="text-xl font-bold text-white">{currentAggregates.campaigns.email.toLocaleString()}</span>
+                   </div>
+                   <div className="w-px bg-slate-700 h-8"></div>
+                   <div className="flex flex-col">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-0.5">LinkedIn (L)</span>
+                      <span className="text-xl font-bold text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span>
+                   </div>
+                </div>
+              }
+              // Removed aggregated comparisons to focus on split view
               icon={<BarChart3 className="w-5 h-5 text-orange-500" />}
               colorClass="text-orange-500"
-              trend={campaignTrend.trend}
-              trendValue={campaignTrend.value}
             />
           </div>
 
@@ -287,7 +293,6 @@ const App: React.FC = () => {
               
               {/* Row 1: Traffic */}
               <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                 {/* TrafficChart now receives chartDataList (Contextual trend) */}
                  <TrafficChart data={chartDataList} />
               </div>
 
@@ -316,7 +321,6 @@ const App: React.FC = () => {
             {/* Activity Column (Right 1/3) - Using Strict Filtered Data */}
             <div className="lg:col-span-1 h-full">
                <div className="sticky top-6">
-                 {/* ActivityFeed remains focused on the selected month/period */}
                  <ActivityFeed data={currentDataList} />
                </div>
             </div>
