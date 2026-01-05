@@ -9,7 +9,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
     newsletters: 1,
     blogs: 16,
     campaigns: { email: 1100, linkedin: 0, other: 0 },
-    activities: ['Weekly Newsletter (1)']
+    activities: ['-']
   },
   {
     month: 'August',
@@ -19,7 +19,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
     newsletters: 3,
     blogs: 8,
     campaigns: { email: 356, linkedin: 475, other: 0 },
-    activities: ['Weekly Newsletter (3)', 'Newsletter Automation', 'Benchmark tool']
+    activities: ['Newsletter Automation', 'Benchmark tool']
   },
   {
     month: 'September',
@@ -29,7 +29,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
     newsletters: 5,
     blogs: 16,
     campaigns: { email: 0, linkedin: 0, other: 0 },
-    activities: ['Weekly Newsletter (5)']
+    activities: ['-']
   },
   {
     month: 'Oct',
@@ -40,7 +40,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
     newsletters: 4,
     blogs: 0,
     campaigns: { email: 2545, linkedin: 444, other: 267 },
-    activities: ['Weekly Newsletter (4)', 'Benchmark Revamp', 'Warehouse campaign revamp']
+    activities: ['Benchmark Revamp', 'Warehouse campaign revamp']
   },
   {
     month: 'Nov',
@@ -51,6 +51,17 @@ export const MONTHLY_DATA: MonthlyData[] = [
     newsletters: 4,
     blogs: 0,
     campaigns: { email: 800, linkedin: 180, other: 0 },
-    activities: ['Weekly Newsletter (4)', 'Benchmark listicles automation', 'Benchmark blog frontend revamp', 'Hiring (3)']
+    activities: ['Benchmark listicles automation', 'Benchmark blog frontend revamp', 'Hiring (3)']
+  },
+  {
+    month: 'Dec',
+    quarter: 'Q3',
+    traffic: 1800,
+    benchmarkVideos: 74,
+    benchmarkVideosSecondary: 930,
+    newsletters: 4,
+    blogs: 0,
+    campaigns: { email: 295, linkedin: 103, other: 0 },
+    activities: ['Listicles automation', 'Website issues', 'Indexing issues']
   }
 ];

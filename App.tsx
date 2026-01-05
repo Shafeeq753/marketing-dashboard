@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { MONTHLY_DATA } from './constants';
 import { StatCard } from './components/StatCard';
 import { 
@@ -18,7 +18,9 @@ import {
   CalendarDays,
   ChevronRight,
   ChevronLeft,
-  Plus
+  Plus,
+  Moon,
+  Sun
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -50,14 +52,24 @@ type PeriodType = 'quarter' | 'month';
 const App: React.FC = () => {
   // State
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
-  const [selectedValue, setSelectedValue] = useState<string>('Oct'); // Default to Oct
+  const [selectedValue, setSelectedValue] = useState<string>('Dec');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // Sync theme with body class for Tailwind dark mode
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Derived Lists
   const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))), []);
   const months = useMemo(() => MONTHLY_DATA.map(d => d.month), []);
 
-  // Filter Logic for KPI Cards & Activity Feed (Strict Filter)
+  // Filter Logic
   const currentDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
       return MONTHLY_DATA.filter(d => d.quarter === selectedValue);
@@ -67,29 +79,26 @@ const App: React.FC = () => {
   }, [selectedPeriodType, selectedValue]);
 
   const currentAggregates = useMemo(() => {
-    if (currentDataList.length === 1) return { ...currentDataList[0], traffic: currentDataList[0].traffic }; // Preserve structure
+    if (currentDataList.length === 1) return { ...currentDataList[0], traffic: currentDataList[0].traffic };
     return aggregateData(currentDataList);
   }, [currentDataList]);
 
-  // Chart Data Logic (Contextual)
+  // Chart Data Logic
   const chartDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
       return currentDataList;
     } else {
       const currentIndex = MONTHLY_DATA.findIndex(d => d.month === selectedValue);
       if (currentIndex > 0) {
-        // Return previous month and current month to show the immediate trend leading into the selection
         return [MONTHLY_DATA[currentIndex - 1], MONTHLY_DATA[currentIndex]];
       }
-      // Fallback for the very first month (no previous data to draw a line from)
       return [MONTHLY_DATA[currentIndex]];
     }
   }, [currentDataList, selectedPeriodType, selectedValue]);
 
-  // Comparison Logic (Default to Previous Period)
+  // Comparison Logic
   const prevAggregates = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
-      // Find previous quarter index
       const idx = quarters.indexOf(selectedValue);
       if (idx > 0) {
         const prevQuarter = quarters[idx - 1];
@@ -97,15 +106,31 @@ const App: React.FC = () => {
         return aggregateData(prevData);
       }
     } else {
-      // Find previous month index
       const idx = months.indexOf(selectedValue);
       if (idx > 0) {
         return MONTHLY_DATA[idx - 1];
       }
     }
-    return null; // No previous data
+    return null;
   }, [selectedPeriodType, selectedValue, quarters, months]);
 
+  // Calculation for Traffic (Average if Quarter, Total if Month)
+  const trafficDisplayValue = useMemo(() => {
+    if (selectedPeriodType === 'quarter' && currentDataList.length > 0) {
+      return Math.round(currentAggregates.traffic / currentDataList.length);
+    }
+    return currentAggregates.traffic;
+  }, [selectedPeriodType, currentAggregates.traffic, currentDataList.length]);
+
+  const trafficPrevValue = useMemo(() => {
+    if (!prevAggregates) return null;
+    if (selectedPeriodType === 'quarter') {
+      const prevQuarter = quarters[quarters.indexOf(selectedValue) - 1];
+      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === prevQuarter).length;
+      return Math.round(prevAggregates.traffic / (prevMonthsCount || 1));
+    }
+    return prevAggregates.traffic;
+  }, [selectedPeriodType, prevAggregates, selectedValue, quarters]);
 
   // Trend Calculation
   const calculateTrend = (current: number, previous: number | undefined | null) => {
@@ -116,11 +141,9 @@ const App: React.FC = () => {
     return { trend: trend as 'up' | 'down' | 'neutral', value: `${diff > 0 ? '+' : ''}${percent}%` };
   };
 
-  const trafficTrend = calculateTrend(currentAggregates.traffic, prevAggregates?.traffic);
+  const trafficTrend = calculateTrend(trafficDisplayValue, trafficPrevValue);
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
   const blogTrend = calculateTrend(currentAggregates.blogs, prevAggregates?.blogs);
-  
-  // Note: Campaign trend is removed for the split view as per user request to show E/L separately
 
   const handleSidebarClick = (type: PeriodType, value: string) => {
     setSelectedPeriodType(type);
@@ -128,15 +151,15 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0f172a] text-slate-100 font-sans transition-all duration-300">
+    <div className={`flex min-h-screen font-sans transition-colors duration-300 ${isDarkMode ? 'bg-[#0f172a] text-slate-100' : 'bg-[#f8fafc] text-slate-900'}`}>
       
       {/* Sidebar */}
       <aside 
         className={`${
           isSidebarCollapsed ? 'w-20' : 'w-64'
-        } bg-slate-900 border-r border-slate-800 flex-shrink-0 fixed h-full transition-all duration-300 z-20 hidden md:flex flex-col`}
+        } ${isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'} border-r flex-shrink-0 fixed h-full transition-all duration-300 z-20 hidden md:flex flex-col`}
       >
-        <div className={`p-6 border-b border-slate-800 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
+        <div className={`p-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'}`}>
           <div className="flex items-center gap-3 overflow-hidden">
              <div className="p-2 bg-orange-600 rounded-lg shadow-lg shadow-orange-900/50 flex-shrink-0">
                 <LayoutDashboard className="w-5 h-5 text-white" />
@@ -148,7 +171,6 @@ const App: React.FC = () => {
         </div>
         
         <nav className="flex-1 p-4 space-y-8 overflow-y-auto overflow-x-hidden">
-          {/* Quarters Section */}
           <div>
             <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2 transition-all duration-300 ${isSidebarCollapsed ? 'text-center' : ''}`}>
               {isSidebarCollapsed ? 'Qtr' : 'Quarters'}
@@ -161,7 +183,7 @@ const App: React.FC = () => {
                     className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'} py-2 rounded-lg text-sm font-medium transition-colors ${
                       selectedPeriodType === 'quarter' && selectedValue === q
                         ? 'bg-orange-600/10 text-orange-500 border border-orange-600/20'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        : isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                     }`}
                     title={isSidebarCollapsed ? `Quarter ${q}` : ''}
                   >
@@ -176,20 +198,19 @@ const App: React.FC = () => {
             </ul>
           </div>
 
-          {/* Months Section */}
           <div>
              <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2 transition-all duration-300 ${isSidebarCollapsed ? 'text-center' : ''}`}>
                {isSidebarCollapsed ? 'Mth' : 'Months'}
              </h3>
-             <div className={`space-y-1 relative ${!isSidebarCollapsed ? 'border-l border-slate-800 ml-3 pl-3' : ''}`}>
+             <div className={`space-y-1 relative ${!isSidebarCollapsed ? `border-l ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} ml-3 pl-3` : ''}`}>
                 {months.map(m => (
                   <button
                     key={m}
                     onClick={() => handleSidebarClick('month', m)}
                     className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-3 py-2 rounded-lg text-sm font-medium transition-colors text-left ${
                       selectedPeriodType === 'month' && selectedValue === m
-                        ? 'text-orange-400 bg-slate-800'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'text-orange-500 bg-orange-500/5'
+                        : isDarkMode ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-900'
                     }`}
                     title={isSidebarCollapsed ? m : ''}
                   >
@@ -201,11 +222,10 @@ const App: React.FC = () => {
           </div>
         </nav>
 
-        {/* Toggle Button */}
-        <div className="p-4 border-t border-slate-800 flex justify-center">
+        <div className={`p-4 border-t ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} flex justify-center`}>
           <button 
             onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className={`p-2 rounded-lg ${isDarkMode ? 'text-slate-400 hover:text-white hover:bg-slate-800' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'} transition-colors`}
           >
             {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           </button>
@@ -217,17 +237,29 @@ const App: React.FC = () => {
         <div className="w-full space-y-8">
           
           {/* Header */}
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-6">
+          <header className={`flex flex-col md:flex-row md:items-center justify-between gap-6 border-b ${isDarkMode ? 'border-slate-800' : 'border-slate-200'} pb-6`}>
             <div>
-              <h1 className="text-3xl font-bold text-white">
+              <h1 className={`text-3xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
                 {selectedPeriodType === 'quarter' ? `${selectedValue} Performance` : `${selectedValue} Performance`}
               </h1>
-              <p className="text-slate-400 mt-2">
+              <p className={`${isDarkMode ? 'text-slate-400' : 'text-slate-500'} mt-2`}>
                 Viewing data for {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`}
               </p>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+               <button 
+                 onClick={() => setIsDarkMode(!isDarkMode)}
+                 className={`p-2.5 rounded-lg border transition-all ${
+                   isDarkMode 
+                     ? 'bg-slate-800 border-slate-700 text-yellow-400 hover:bg-slate-700' 
+                     : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                 }`}
+                 title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+               >
+                 {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+               </button>
+
                <button className="flex items-center gap-2 bg-orange-600 hover:bg-orange-500 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-lg shadow-orange-900/20 active:transform active:scale-95">
                  <Plus className="w-4 h-4" />
                  Add Data
@@ -235,16 +267,17 @@ const App: React.FC = () => {
             </div>
           </header>
 
-          {/* KPI Cards (Using Strict Filtered Data) */}
+          {/* KPI Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard 
-              title="Total Traffic"
-              value={currentAggregates.traffic.toLocaleString()} 
-              subValue={prevAggregates ? `vs ${prevAggregates.traffic.toLocaleString()}` : undefined}
+              title={selectedPeriodType === 'quarter' ? "Average Traffic" : "Total Traffic"}
+              value={trafficDisplayValue.toLocaleString()} 
+              subValue={trafficPrevValue ? `vs ${trafficPrevValue.toLocaleString()}` : undefined}
               icon={<Users className="w-5 h-5 text-orange-400" />}
               colorClass="text-orange-400"
               trend={trafficTrend.trend}
               trendValue={trafficTrend.value}
+              isDark={isDarkMode}
             />
             <StatCard 
               title="Benchmark Videos"
@@ -254,6 +287,7 @@ const App: React.FC = () => {
               colorClass="text-amber-400"
               trend={videoTrend.trend}
               trendValue={videoTrend.value}
+              isDark={isDarkMode}
             />
              <StatCard 
               title="Blogs Published"
@@ -263,65 +297,63 @@ const App: React.FC = () => {
               colorClass="text-yellow-400"
               trend={blogTrend.trend}
               trendValue={blogTrend.value}
+              isDark={isDarkMode}
             />
             <StatCard 
               title="Campaigns"
               value={
                 <div className="flex items-center gap-4 mt-1">
                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-0.5">Emails (E)</span>
-                      <span className="text-xl font-bold text-white">{currentAggregates.campaigns.email.toLocaleString()}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>Emails (E)</span>
+                      <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentAggregates.campaigns.email.toLocaleString()}</span>
                    </div>
-                   <div className="w-px bg-slate-700 h-8"></div>
+                   <div className={`w-px ${isDarkMode ? 'bg-slate-700' : 'bg-slate-200'} h-8`}></div>
                    <div className="flex flex-col">
-                      <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-0.5">LinkedIn (L)</span>
-                      <span className="text-xl font-bold text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider mb-0.5 ${isDarkMode ? 'text-slate-400' : 'text-slate-500'}`}>LinkedIn (L)</span>
+                      <span className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentAggregates.campaigns.linkedin.toLocaleString()}</span>
                    </div>
                 </div>
               }
-              // Removed aggregated comparisons to focus on split view
               icon={<BarChart3 className="w-5 h-5 text-orange-500" />}
               colorClass="text-orange-500"
+              isDark={isDarkMode}
             />
           </div>
 
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            {/* Charts Column (Left 2/3) - Using Contextual Chart Data */}
+            {/* Charts Column */}
             <div className="lg:col-span-2 space-y-6">
               
-              {/* Row 1: Traffic */}
-              <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                 <TrafficChart data={chartDataList} />
+              <div className={`${isDarkMode ? 'bg-card border-slate-700/50' : 'bg-white border-slate-200'} rounded-xl p-6 border shadow-sm`}>
+                 <TrafficChart data={chartDataList} isDark={isDarkMode} />
               </div>
 
-              {/* Row 2: Videos & Newsletters */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                   <VideosChart data={chartDataList} />
+                 <div className={`${isDarkMode ? 'bg-card border-slate-700/50' : 'bg-white border-slate-200'} rounded-xl p-6 border shadow-sm`}>
+                   <VideosChart data={chartDataList} isDark={isDarkMode} />
                  </div>
-                 <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                   <NewslettersChart data={chartDataList} />
+                 <div className={`${isDarkMode ? 'bg-card border-slate-700/50' : 'bg-white border-slate-200'} rounded-xl p-6 border shadow-sm`}>
+                   <NewslettersChart data={chartDataList} isDark={isDarkMode} />
                  </div>
               </div>
 
-              {/* Row 3: Blogs & Campaigns */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                 <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                   <BlogsChart data={chartDataList} />
+                 <div className={`${isDarkMode ? 'bg-card border-slate-700/50' : 'bg-white border-slate-200'} rounded-xl p-6 border shadow-sm`}>
+                   <BlogsChart data={chartDataList} isDark={isDarkMode} />
                  </div>
-                 <div className="bg-card rounded-xl p-6 border border-slate-700/50 shadow-lg">
-                   <CampaignPerformanceChart data={chartDataList} />
+                 <div className={`${isDarkMode ? 'bg-card border-slate-700/50' : 'bg-white border-slate-200'} rounded-xl p-6 border shadow-sm`}>
+                   <CampaignPerformanceChart data={chartDataList} isDark={isDarkMode} />
                  </div>
               </div>
 
             </div>
 
-            {/* Activity Column (Right 1/3) - Using Strict Filtered Data */}
+            {/* Activity Column */}
             <div className="lg:col-span-1 h-full">
                <div className="sticky top-6">
-                 <ActivityFeed data={currentDataList} />
+                 <ActivityFeed data={currentDataList} isDark={isDarkMode} />
                </div>
             </div>
 
