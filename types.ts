@@ -9,7 +9,8 @@ export interface MonthlyData {
   quarter: string;
   traffic: number;
   benchmarkVideos: number;
-  benchmarkVideosSecondary?: number; // The number in brackets (e.g., views or cumulative)
+  benchmarkVideosSecondary?: number; // Historical secondary metric (e.g. views)
+  totalVideosOnSite: number; // The running total of active videos on the site
   newsletters: number;
   blogs: number;
   campaigns: CampaignMetrics;

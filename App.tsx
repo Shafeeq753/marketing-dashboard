@@ -26,25 +26,32 @@ import { MonthlyData } from './types';
 
 // Helper to aggregate data for a list of months (e.g. for a Quarter)
 const aggregateData = (data: MonthlyData[]) => {
-  return data.reduce((acc, curr) => ({
+  const aggregated = data.reduce((acc, curr) => ({
     traffic: acc.traffic + curr.traffic,
     benchmarkVideos: acc.benchmarkVideos + curr.benchmarkVideos,
-    benchmarkVideosSecondary: (acc.benchmarkVideosSecondary || 0) + (curr.benchmarkVideosSecondary || 0),
     newsletters: acc.newsletters + curr.newsletters,
     blogs: acc.blogs + curr.blogs,
     campaigns: {
         email: acc.campaigns.email + curr.campaigns.email,
         linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
         other: acc.campaigns.other + curr.campaigns.other
-    }
+    },
+    totalVideosOnSite: curr.totalVideosOnSite // Always take the latest value for the site total
   }), { 
     traffic: 0, 
     benchmarkVideos: 0, 
-    benchmarkVideosSecondary: 0, 
     newsletters: 0, 
     blogs: 0, 
-    campaigns: { email: 0, linkedin: 0, other: 0 } 
+    campaigns: { email: 0, linkedin: 0, other: 0 },
+    totalVideosOnSite: 0
   });
+
+  // Ensure we get the actual last month's total from the input list
+  if (data.length > 0) {
+    aggregated.totalVideosOnSite = data[data.length - 1].totalVideosOnSite;
+  }
+
+  return aggregated;
 };
 
 type PeriodType = 'quarter' | 'month';
@@ -79,7 +86,7 @@ const App: React.FC = () => {
   }, [selectedPeriodType, selectedValue]);
 
   const currentAggregates = useMemo(() => {
-    if (currentDataList.length === 1) return { ...currentDataList[0], traffic: currentDataList[0].traffic };
+    if (currentDataList.length === 1) return currentDataList[0];
     return aggregateData(currentDataList);
   }, [currentDataList]);
 
@@ -282,7 +289,11 @@ const App: React.FC = () => {
             <StatCard 
               title="Benchmark Videos"
               value={currentAggregates.benchmarkVideos}
-              subValue={currentAggregates.benchmarkVideosSecondary ? `(${currentAggregates.benchmarkVideosSecondary} views)` : undefined}
+              subValue={
+                prevAggregates 
+                  ? `vs ${prevAggregates.benchmarkVideos.toLocaleString()} (${currentAggregates.totalVideosOnSite} total)` 
+                  : `(${currentAggregates.totalVideosOnSite} total)`
+              }
               icon={<Video className="w-5 h-5 text-amber-400" />}
               colorClass="text-amber-400"
               trend={videoTrend.trend}
