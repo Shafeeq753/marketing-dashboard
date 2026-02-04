@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Sparkles, RefreshCw } from 'lucide-react';
 import { MonthlyData } from '../types';
 import { generateQuarterlyInsights } from '../services/geminiService';
@@ -11,6 +12,11 @@ interface AiInsightsProps {
 export const AiInsights: React.FC<AiInsightsProps> = ({ quarter, data }) => {
   const [insights, setInsights] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Reset insights when the input data changes to maintain relevant state.
+  useEffect(() => {
+    setInsights(null);
+  }, [quarter, data]);
 
   const handleGenerate = async () => {
     setLoading(true);

@@ -1,3 +1,4 @@
+
 import { MonthlyData } from './types';
 
 export const MONTHLY_DATA: MonthlyData[] = [
@@ -66,5 +67,16 @@ export const MONTHLY_DATA: MonthlyData[] = [
     blogs: 0,
     campaigns: { email: 295, linkedin: 103, other: 0 },
     activities: ['Listicles automation', 'Website issues', 'Indexing issues']
+  },
+  {
+    month: 'January',
+    quarter: 'Q4',
+    traffic: 1600,
+    benchmarkVideos: 34,
+    totalVideosOnSite: 938,
+    newsletters: 5,
+    blogs: 52, // Updated to 52 total (36 agency pillar + 16 listicles)
+    campaigns: { email: 0, linkedin: 0, other: 0 },
+    activities: ['Website edits', 'Indexing issues']
   }
 ];
