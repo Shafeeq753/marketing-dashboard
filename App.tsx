@@ -17,7 +17,6 @@ import {
   Video, 
   Layers, 
   BarChart3,
-  LayoutDashboard,
   CalendarDays,
   ChevronRight,
   ChevronLeft,
@@ -28,8 +27,7 @@ import {
   MonitorPlay,
   Zap,
   LayoutGrid,
-  MapPin,
-  HelpCircle
+  LayoutDashboard
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -67,19 +65,17 @@ const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
   const [selectedValue, setSelectedValue] = useState<string>('January');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
   const [isWebsiteEditsModalOpen, setIsWebsiteEditsModalOpen] = useState(false);
 
+  // Strictly enforced dark mode
+  const isDarkMode = true;
+
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.documentElement.classList.add('light');
-    }
-  }, [isDarkMode]);
+    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('light');
+  }, []);
 
   const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))), []);
   const months = useMemo(() => MONTHLY_DATA.map(d => d.month), []);
@@ -170,16 +166,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans transition-all duration-700`}>
+    <div className={`flex min-h-screen font-sans text-slate-200 bg-transparent`}>
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} glass m-4 mr-0 rounded-[2.5rem] flex-shrink-0 fixed h-[calc(100vh-2rem)] transition-all duration-500 z-30 hidden lg:flex flex-col shadow-2xl`}>
+      <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} sidebar-glass m-4 mr-0 rounded-[2.5rem] flex-shrink-0 fixed h-[calc(100vh-2rem)] transition-all duration-500 z-30 hidden lg:flex flex-col shadow-2xl`}>
         <div className={`p-10 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start gap-4'}`}>
           <div className="p-3 bg-orange-600 rounded-2xl shadow-xl shadow-orange-900/40 flex-shrink-0">
             <Zap className="w-6 h-6 text-white" />
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col">
-              <span className={`font-black text-xl tracking-tighter whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>MPV ANALYTICS</span>
+              <span className="font-black text-xl tracking-tighter whitespace-nowrap text-white">MPV ANALYTICS</span>
               <span className="text-[10px] font-black text-orange-500 tracking-[0.2em] uppercase">Enterprise v2.0</span>
             </div>
           )}
@@ -192,7 +188,7 @@ const App: React.FC = () => {
             <ul className="space-y-3">
               {quarters.map(q => (
                 <li key={q}>
-                  <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500' : isDarkMode ? 'text-slate-500 hover:text-white hover:bg-white/5' : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'}`}>
+                  <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
                     <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
                   </button>
                 </li>
@@ -205,7 +201,7 @@ const App: React.FC = () => {
             </h3>
             <div className={`space-y-1 ${!isSidebarCollapsed ? `pl-4` : ''}`}>
               {months.map(m => (
-                <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : isDarkMode ? 'text-slate-500 hover:text-slate-200 hover:bg-white/5' : 'text-slate-400 hover:text-slate-900 hover:bg-slate-100'}`}>
+                <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
                   {isSidebarCollapsed ? m.substring(0, 3) : m}
                   {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,1)]"></div>}
                 </button>
@@ -213,8 +209,8 @@ const App: React.FC = () => {
             </div>
           </div>
         </nav>
-        <div className={`p-8 border-t ${isDarkMode ? 'border-white/5' : 'border-slate-200/50'} flex justify-center`}>
-          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className={`p-3.5 rounded-2xl glass ${isDarkMode ? 'text-slate-500 hover:text-white' : 'text-slate-400 hover:text-slate-900'} transition-all hover:scale-110 active:scale-90`}>
+        <div className="p-8 border-t border-white/5 flex justify-center">
+          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-3.5 rounded-2xl glass text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-90">
             {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           </button>
         </div>
@@ -227,29 +223,29 @@ const App: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center gap-3">
                 <span className="px-3.5 py-1.5 text-[9px] font-black text-white bg-accent rounded-full uppercase tracking-widest shadow-lg shadow-accent/20">Insight Live</span>
-                <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>System Ready</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">System Ready</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <h1 className={`text-6xl font-black tracking-tighter transition-all ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                <h1 className="text-6xl font-black tracking-tighter transition-all text-white">
                   <span className="opacity-30">{selectedValue.substring(0, 3)}</span> Overview.
                 </h1>
               </div>
-              <p className={`${isDarkMode ? 'text-slate-500' : 'text-slate-400'} text-sm font-bold tracking-tight`}>
+              <p className="text-slate-500 text-sm font-bold tracking-tight">
                 Analyzing {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`} metrics
               </p>
             </div>
-            <div className="flex items-center gap-5">
-              <button className="flex items-center gap-3 bg-white text-slate-950 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:translate-y-[-2px] hover:shadow-2xl active:scale-95">
+            <div className="flex items-center">
+              <button className="flex items-center gap-3 bg-white text-slate-950 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:translate-y-[-2px] hover:shadow-2xl active:scale-95 shadow-xl shadow-white/5">
                 <Plus className="w-5 h-5" />Upload Data
               </button>
             </div>
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={isDarkMode} />
-            <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={isDarkMode} />
-            <StatCard title="New Published pages" value={currentAggregates.blogs} subValue={prevAggregates ? `vs prev: ${prevAggregates.blogs}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={isDarkMode} isClickable={true} onClick={() => setIsModalOpen(true)} />
-            <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className={`text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>Email</span><span className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className={`text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 ${isDarkMode ? 'text-slate-500' : 'text-slate-400'}`}>LinkedIn</span><span className={`text-2xl font-black ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={isDarkMode} />
+            <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} />
+            <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
+            <StatCard title="New Published pages" value={currentAggregates.blogs} subValue={prevAggregates ? `vs prev: ${prevAggregates.blogs}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
+            <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4">
@@ -258,41 +254,41 @@ const App: React.FC = () => {
                 <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:scale-125 transition-transform duration-1000">
                   <Zap className="w-64 h-64" />
                 </div>
-                <TrafficChart data={chartDataList} isDark={isDarkMode} />
+                <TrafficChart data={chartDataList} isDark={true} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><VideosChart data={chartDataList} isDark={isDarkMode} /></div>
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><NewslettersChart data={chartDataList} isDark={isDarkMode} /></div>
+                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
+                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><BlogsChart data={chartDataList} isDark={isDarkMode} /></div>
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={isDarkMode} /></div>
+                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
+                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
               </div>
             </div>
             <div className="lg:col-span-1">
               <div className="sticky top-10">
-                <ActivityFeed data={currentDataList} isDark={isDarkMode} onActivityClick={handleActivityClick} />
+                <ActivityFeed data={currentDataList} isDark={true} onActivityClick={handleActivityClick} />
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      <CrawlStatsModal isOpen={isCrawlModalOpen} onClose={() => setIsCrawlModalOpen(false)} isDark={isDarkMode} />
-      <WebsiteEditsModal isOpen={isWebsiteEditsModalOpen} onClose={() => setIsWebsiteEditsModalOpen(false)} isDark={isDarkMode} />
+      <CrawlStatsModal isOpen={isCrawlModalOpen} onClose={() => setIsCrawlModalOpen(false)} isDark={true} />
+      <WebsiteEditsModal isOpen={isWebsiteEditsModalOpen} onClose={() => setIsWebsiteEditsModalOpen(false)} isDark={true} />
 
-      {/* Content Deep Dive Modal - REBUILT TO MATCH SCREENSHOT */}
+      {/* Content Deep Dive Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className={`relative w-full max-w-2xl transform overflow-hidden rounded-[2rem] border ${isDarkMode ? 'bg-[#0f1115] border-white/5' : 'bg-white border-slate-200'} shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] transition-all animate-in fade-in zoom-in duration-300`}>
+          <div className="relative w-full max-w-2xl transform overflow-hidden rounded-[2rem] border bg-[#0f1115] border-white/5 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] transition-all animate-in fade-in zoom-in duration-300">
             
             {/* Modal Header */}
-            <div className={`flex flex-col items-center pt-10 pb-6 relative`}>
+            <div className="flex flex-col items-center pt-10 pb-6 relative">
                <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg mb-4">
                   <Layers className="w-7 h-7 text-white" />
                </div>
-               <h3 className={`text-2xl font-black text-white uppercase tracking-tighter`}>Content Deep Dive</h3>
+               <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Content Deep Dive</h3>
                <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em] mt-1">BREAKDOWN: {selectedValue}</p>
                
                <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-2 rounded-lg bg-white/5 text-slate-500 hover:text-white transition-colors border border-white/5">
@@ -318,7 +314,7 @@ const App: React.FC = () => {
                     { label: 'FAQ PAGES', value: 5, icon: <Zap className="w-3.5 h-3.5" /> },
                     { label: 'GLOSSARY', value: 10, icon: <Layers className="w-3.5 h-3.5" /> },
                   ].map((item, i) => (
-                    <div key={i} className={`p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col justify-between h-24`}>
+                    <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col justify-between h-24">
                       <div className="flex justify-between items-start">
                         <span className="text-2xl font-black text-white leading-none">{item.value}</span>
                         <div className="text-orange-500/60">{item.icon}</div>
