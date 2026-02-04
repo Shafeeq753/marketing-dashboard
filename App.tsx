@@ -26,8 +26,7 @@ import {
   Tag,
   MonitorPlay,
   Zap,
-  LayoutGrid,
-  LayoutDashboard
+  LayoutGrid
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -69,12 +68,8 @@ const App: React.FC = () => {
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
   const [isWebsiteEditsModalOpen, setIsWebsiteEditsModalOpen] = useState(false);
 
-  // Strictly enforced dark mode
-  const isDarkMode = true;
-
   useEffect(() => {
     document.documentElement.classList.add('dark');
-    document.documentElement.classList.remove('light');
   }, []);
 
   const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))), []);
@@ -132,8 +127,7 @@ const App: React.FC = () => {
   const trafficPrevValue = useMemo(() => {
     if (!prevAggregates) return null;
     if (selectedPeriodType === 'quarter') {
-      const prevQuarter = quarters[quarters.indexOf(selectedValue) - 1];
-      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === prevQuarter).length;
+      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === quarters[quarters.indexOf(selectedValue) - 1]).length;
       return Math.round(prevAggregates.traffic / (prevMonthsCount || 1));
     }
     return prevAggregates.traffic;
@@ -166,17 +160,17 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`flex min-h-screen font-sans text-slate-200 bg-transparent`}>
+    <div className="flex min-h-screen font-sans text-slate-200 selection:bg-orange-500/30">
       {/* Sidebar */}
-      <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} sidebar-glass m-4 mr-0 rounded-[2.5rem] flex-shrink-0 fixed h-[calc(100vh-2rem)] transition-all duration-500 z-30 hidden lg:flex flex-col shadow-2xl`}>
+      <aside className={`${isSidebarCollapsed ? 'w-24' : 'w-80'} sidebar-glass m-6 rounded-[2.5rem] flex-shrink-0 fixed h-[calc(100vh-3rem)] transition-all duration-700 z-30 hidden lg:flex flex-col shadow-2xl`}>
         <div className={`p-10 flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-start gap-4'}`}>
-          <div className="p-3 bg-orange-600 rounded-2xl shadow-xl shadow-orange-900/40 flex-shrink-0">
+          <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-700 rounded-2xl shadow-xl shadow-orange-900/40 flex-shrink-0">
             <Zap className="w-6 h-6 text-white" />
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col">
               <span className="font-black text-xl tracking-tighter whitespace-nowrap text-white">MPV ANALYTICS</span>
-              <span className="text-[10px] font-black text-orange-500 tracking-[0.2em] uppercase">Enterprise v2.0</span>
+              <span className="text-[10px] font-black text-orange-500 tracking-[0.2em] uppercase opacity-80">Enterprise v2.0</span>
             </div>
           )}
         </div>
@@ -188,7 +182,7 @@ const App: React.FC = () => {
             <ul className="space-y-3">
               {quarters.map(q => (
                 <li key={q}>
-                  <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                  <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
                     <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
                   </button>
                 </li>
@@ -203,66 +197,66 @@ const App: React.FC = () => {
               {months.map(m => (
                 <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
                   {isSidebarCollapsed ? m.substring(0, 3) : m}
-                  {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,1)]"></div>}
+                  {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
                 </button>
               ))}
             </div>
           </div>
         </nav>
-        <div className="p-8 border-t border-white/5 flex justify-center">
-          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-3.5 rounded-2xl glass text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-90">
+        <div className="p-8 flex justify-center border-t border-white/5">
+          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-4 rounded-2xl glass-card text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-90 shadow-xl shadow-black/20">
             {isSidebarCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
-      <main className={`flex-1 ${isSidebarCollapsed ? 'lg:ml-28' : 'lg:ml-80'} p-4 md:p-12 transition-all duration-500`}>
+      <main className={`flex-1 ${isSidebarCollapsed ? 'lg:ml-32' : 'lg:ml-[22rem]'} p-6 md:p-12 transition-all duration-700`}>
         <div className="max-w-7xl mx-auto space-y-12">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="space-y-2">
+          <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <span className="px-3.5 py-1.5 text-[9px] font-black text-white bg-accent rounded-full uppercase tracking-widest shadow-lg shadow-accent/20">Insight Live</span>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">System Ready</span>
+                <span className="px-4 py-2 text-[9px] font-black text-white bg-accent rounded-full uppercase tracking-widest shadow-2xl shadow-accent/40 animate-pulse">Insight Live</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Ready</span>
               </div>
               <div className="flex items-baseline gap-2">
-                <h1 className="text-6xl font-black tracking-tighter transition-all text-white">
-                  <span className="opacity-30">{selectedValue.substring(0, 3)}</span> Overview.
+                <h1 className="text-7xl font-black tracking-tighter transition-all text-white">
+                  <span className="opacity-20">{selectedValue.substring(0, 3)}</span> Overview.
                 </h1>
               </div>
               <p className="text-slate-500 text-sm font-bold tracking-tight">
-                Analyzing {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`} metrics
+                Deep diving into {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`} strategy data
               </p>
             </div>
             <div className="flex items-center">
-              <button className="flex items-center gap-3 bg-white text-slate-950 px-10 py-5 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:translate-y-[-2px] hover:shadow-2xl active:scale-95 shadow-xl shadow-white/5">
-                <Plus className="w-5 h-5" />Upload Data
+              <button className="group flex items-center gap-4 bg-white text-slate-950 px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_60px_-15px_rgba(255,255,255,0.3)] active:scale-95">
+                <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" /> Upload Data
               </button>
             </div>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
             <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} />
             <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
             <StatCard title="New Published pages" value={currentAggregates.blogs} subValue={prevAggregates ? `vs prev: ${prevAggregates.blogs}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
             <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
             <div className="lg:col-span-2 space-y-10">
-              <div className="glass rounded-[2.5rem] p-10 shadow-2xl overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:scale-125 transition-transform duration-1000">
+              <div className="glass-card rounded-[3rem] p-12 shadow-2xl overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-125 transition-transform duration-1000">
                   <Zap className="w-64 h-64" />
                 </div>
                 <TrafficChart data={chartDataList} isDark={true} />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
+                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
+                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
-                <div className="glass rounded-[2.5rem] p-8 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
+                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
+                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
               </div>
             </div>
             <div className="lg:col-span-1">
@@ -279,103 +273,87 @@ const App: React.FC = () => {
 
       {/* Content Deep Dive Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative w-full max-w-2xl transform overflow-hidden rounded-[2rem] border bg-[#0f1115] border-white/5 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] transition-all animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-500" onClick={() => setIsModalOpen(false)}></div>
+          <div className="relative w-full max-w-2xl transform overflow-hidden rounded-[3rem] border border-white/10 bg-[#0f1115]/80 backdrop-blur-3xl shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] transition-all animate-in fade-in zoom-in duration-500">
             
             {/* Modal Header */}
-            <div className="flex flex-col items-center pt-10 pb-6 relative">
-               <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg mb-4">
-                  <Layers className="w-7 h-7 text-white" />
+            <div className="flex flex-col items-center pt-12 pb-8 relative border-b border-white/5">
+               <div className="p-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl shadow-2xl shadow-orange-500/20 mb-6">
+                  <Layers className="w-8 h-8 text-white" />
                </div>
-               <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Content Deep Dive</h3>
-               <p className="text-[10px] font-bold text-orange-500 uppercase tracking-[0.2em] mt-1">BREAKDOWN: {selectedValue}</p>
+               <h3 className="text-3xl font-black text-white uppercase tracking-tighter">Content Deep Dive</h3>
+               <p className="text-[11px] font-black text-orange-500 uppercase tracking-[0.3em] mt-2">BREAKDOWN: {selectedValue}</p>
                
-               <button onClick={() => setIsModalOpen(false)} className="absolute top-8 right-8 p-2 rounded-lg bg-white/5 text-slate-500 hover:text-white transition-colors border border-white/5">
-                <X className="w-5 h-5" />
+               <button onClick={() => setIsModalOpen(false)} className="absolute top-10 right-10 p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-white transition-colors border border-white/10 hover:bg-white/10">
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="px-10 pb-10 space-y-10">
+            <div className="px-12 pb-12 space-y-12 max-h-[70vh] overflow-y-auto custom-scrollbar pt-8">
               
               {/* EXPLAINER VIDEO AGENCY PILLAR Section */}
-              <section className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-4 w-1 bg-orange-500 rounded-full"></div>
-                  <h4 className="text-sm font-black text-white uppercase tracking-widest">EXPLAINER VIDEO AGENCY PILLAR</h4>
+              <section className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="h-5 w-1.5 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.8)]"></div>
+                  <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">EXPLAINER VIDEO AGENCY PILLAR</h4>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: 'CASE STUDIES', value: 5, icon: <FileText className="w-3.5 h-3.5" /> },
-                    { label: 'SERVICE PAGE', value: 1, icon: <LayoutGrid className="w-3.5 h-3.5" /> },
-                    { label: 'LOCATION PAGES', value: 5, icon: <Tag className="w-3.5 h-3.5" /> },
-                    { label: 'BLOGS', value: 10, icon: <FileText className="w-3.5 h-3.5" /> },
-                    { label: 'FAQ PAGES', value: 5, icon: <Zap className="w-3.5 h-3.5" /> },
-                    { label: 'GLOSSARY', value: 10, icon: <Layers className="w-3.5 h-3.5" /> },
+                    { label: 'CASE STUDIES', value: 5, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'SERVICE PAGE', value: 1, icon: <LayoutGrid className="w-4 h-4" /> },
+                    { label: 'LOCATION PAGES', value: 5, icon: <Tag className="w-4 h-4" /> },
+                    { label: 'BLOGS', value: 10, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'FAQ PAGES', value: 5, icon: <Zap className="w-4 h-4" /> },
+                    { label: 'GLOSSARY', value: 10, icon: <Layers className="w-4 h-4" /> },
                   ].map((item, i) => (
-                    <div key={i} className="p-4 rounded-xl bg-white/5 border border-white/5 flex flex-col justify-between h-24">
+                    <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
-                        <span className="text-2xl font-black text-white leading-none">{item.value}</span>
-                        <div className="text-orange-500/60">{item.icon}</div>
+                        <span className="text-3xl font-black text-white leading-none tracking-tighter group-hover:scale-110 transition-transform origin-left">{item.value}</span>
+                        <div className="text-orange-500 opacity-60 group-hover:opacity-100 transition-opacity">{item.icon}</div>
                       </div>
-                      <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">{item.label}</span>
+                      <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest group-hover:text-slate-300 transition-colors">{item.label}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Total Distribution Bar */}
-                <div className="bg-orange-600/10 border border-orange-500/20 rounded-xl p-3 flex justify-between items-center px-5">
-                   <span className="text-[9px] font-black text-orange-500 uppercase tracking-[0.2em]">TOTAL PILLAR DISTRIBUTION</span>
-                   <span className="text-xl font-black text-orange-500">36</span>
+                <div className="bg-orange-600/10 border border-orange-500/20 rounded-2xl p-4 flex justify-between items-center px-8 shadow-inner">
+                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PILLAR DISTRIBUTION</span>
+                   <span className="text-2xl font-black text-orange-500 tracking-tighter">36</span>
                 </div>
               </section>
 
               {/* Curated Listicles Section */}
-              <section className="space-y-6 pt-4">
+              <section className="space-y-8 pt-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-4 w-1 bg-[#8b5cf6] rounded-full"></div>
-                    <h4 className="text-sm font-black text-white uppercase tracking-widest">CURATED LISTICLES</h4>
+                  <div className="flex items-center gap-4">
+                    <div className="h-5 w-1.5 bg-[#8b5cf6] rounded-full shadow-[0_0_15px_rgba(139,92,246,0.8)]"></div>
+                    <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">CURATED LISTICLES</h4>
                   </div>
-                  <span className="px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-[#8b5cf6] text-white shadow-lg shadow-[#8b5cf6]/20">
+                  <span className="px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-[#8b5cf6] text-white shadow-2xl shadow-[#8b5cf6]/40">
                     16 ITEMS TOTAL
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3">
-                    <div className="flex items-center gap-2 text-[8px] font-black text-orange-400 uppercase tracking-widest">
-                       <Tag className="w-3 h-3" /> INDUSTRY VERTICAL
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { label: 'INDUSTRY VERTICAL', icon: <Tag className="w-4 h-4" />, items: ['AI', 'Cyber', 'FinTech', 'Health', 'Bio', 'Clean', 'EdTech', 'Data'] },
+                    { label: 'VIDEO FORMAT', icon: <MonitorPlay className="w-4 h-4" />, items: ['Explainer', 'Brand'] },
+                    { label: 'STYLE MATRIX', icon: <LayoutGrid className="w-4 h-4" />, items: ['2D', '3D', 'Motion', 'Live'] }
+                  ].map((cat, i) => (
+                    <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-4 group hover:bg-white/10 transition-colors">
+                      <div className="flex items-center gap-2 text-[10px] font-black text-orange-400 uppercase tracking-widest opacity-80 group-hover:opacity-100">
+                         {cat.icon} {cat.label}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {cat.items.map(t => (
+                          <span key={t} className="px-2.5 py-1 rounded-lg bg-white/5 text-[9px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors">{t}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['AI', 'Cyber', 'FinTech', 'Health', 'Bio', 'Clean', 'EdTech', 'Data'].map(t => (
-                        <span key={t} className="px-2 py-0.5 rounded bg-white/5 text-[8px] font-bold text-slate-400">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3">
-                    <div className="flex items-center gap-2 text-[8px] font-black text-orange-400 uppercase tracking-widest">
-                       <MonitorPlay className="w-3 h-3" /> VIDEO FORMAT
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['Explainer', 'Brand'].map(t => (
-                        <span key={t} className="px-2 py-0.5 rounded bg-white/5 text-[8px] font-bold text-slate-400">{t}</span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5 space-y-3">
-                    <div className="flex items-center gap-2 text-[8px] font-black text-orange-400 uppercase tracking-widest">
-                       <LayoutDashboard className="w-3 h-3" /> STYLE MATRIX
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {['2D', '3D', 'Motion', 'Live'].map(t => (
-                        <span key={t} className="px-2 py-0.5 rounded bg-white/5 text-[8px] font-bold text-slate-400">{t}</span>
-                      ))}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </section>
 
@@ -383,7 +361,7 @@ const App: React.FC = () => {
               <div className="flex justify-center pt-4">
                 <button 
                   onClick={() => setIsModalOpen(false)}
-                  className="w-1/2 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] bg-[#f26522] hover:bg-[#e05a1d] text-white shadow-xl transition-all active:scale-95"
+                  className="w-full sm:w-1/2 py-5 rounded-2xl font-black text-[11px] uppercase tracking-[0.3em] bg-[#f26522] hover:bg-[#ff7a3d] text-white shadow-2xl shadow-orange-600/30 transition-all active:scale-95 hover:translate-y-[-2px]"
                 >
                   EXIT ANALYSIS
                 </button>

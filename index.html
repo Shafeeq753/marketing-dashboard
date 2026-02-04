@@ -47,7 +47,7 @@
         background: rgba(249, 115, 22, 0.4);
       }
 
-      /* Animated mesh background optimized for dark mode only */
+      /* Enhanced Mesh Background */
       .mesh-bg {
         position: fixed;
         top: 0;
@@ -57,28 +57,70 @@
         z-index: -1;
         background-color: #020617;
         background-image: 
-          radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-          radial-gradient(at 50% 0%, hsla(225,39%,15%,1) 0, transparent 50%), 
-          radial-gradient(at 100% 0%, hsla(339,49%,15%,1) 0, transparent 50%), 
-          radial-gradient(at 0% 100%, hsla(26,100%,10%,1) 0, transparent 50%), 
-          radial-gradient(at 50% 100%, hsla(225,39%,15%,1) 0, transparent 50%), 
-          radial-gradient(at 100% 100%, hsla(339,49%,15%,1) 0, transparent 50%);
-        filter: blur(100px);
-        opacity: 0.8;
+          radial-gradient(at 10% 20%, hsla(26, 91%, 35%, 0.15) 0px, transparent 50%),
+          radial-gradient(at 90% 10%, hsla(263, 67%, 41%, 0.15) 0px, transparent 50%),
+          radial-gradient(at 50% 50%, hsla(33, 100%, 53%, 0.1) 0px, transparent 50%),
+          radial-gradient(at 80% 90%, hsla(253, 16%, 7%, 1) 0px, transparent 50%),
+          radial-gradient(at 20% 80%, hsla(22, 100%, 50%, 0.12) 0px, transparent 50%);
+        filter: blur(80px);
+        animation: mesh-move 20s infinite alternate ease-in-out;
+      }
+
+      @keyframes mesh-move {
+        from { transform: scale(1); }
+        to { transform: scale(1.1); }
       }
 
       .glass {
-        background: rgba(15, 23, 42, 0.4);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(24px) saturate(180%);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       }
       
-      .sidebar-glass {
-        background: rgba(2, 6, 23, 0.6);
+      .glass-card {
+        background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .sidebar-glass {
+        background: rgba(15, 23, 42, 0.5);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .shimmer {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .shimmer::after {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          to bottom right,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0) 40%,
+          rgba(255, 255, 255, 0.03) 50%,
+          rgba(255, 255, 255, 0) 60%,
+          rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        transition: transform 0.8s;
+        pointer-events: none;
+      }
+
+      .shimmer:hover::after {
+        transform: rotate(30deg) translate(20%, 20%);
       }
     </style>
     <script type="importmap">

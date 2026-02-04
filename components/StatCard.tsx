@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Minus, ExternalLink } from 'lucide-react';
 
@@ -29,27 +30,22 @@ export const StatCard: React.FC<StatCardProps> = ({
   return (
     <div 
       onClick={onClick}
-      className={`relative overflow-hidden glass rounded-2xl p-6 transition-all duration-500 group ${
-        isClickable ? 'cursor-pointer hover:bg-white/10 dark:hover:bg-white/5 active:scale-95' : ''
-      } ${isClickable ? 'hover:-translate-y-1 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.3)]' : ''}`}
+      className={`relative overflow-hidden glass-card rounded-3xl p-6 transition-all duration-500 group shimmer ${
+        isClickable ? 'cursor-pointer hover:bg-white/10 active:scale-95' : ''
+      } ${isClickable ? 'hover:-translate-y-1 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.5)]' : ''}`}
     >
-      {/* Glossy Refraction Effect */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
-      
       <div className="flex justify-between items-start mb-6">
-        <div className={`p-3 rounded-xl transition-all duration-300 ${
-          isDark ? 'bg-slate-800/80' : 'bg-white/80'
-        } ${colorClass} shadow-inner group-hover:scale-110`}>
+        <div className={`p-3 rounded-2xl transition-all duration-300 bg-white/5 ${colorClass} shadow-xl group-hover:scale-110 group-hover:bg-white/10`}>
           {icon}
         </div>
         <div className="flex gap-2 items-center">
           {isClickable && (
-            <div className={`text-slate-400 group-hover:text-orange-500 transition-colors animate-pulse`}>
+            <div className={`text-slate-500 group-hover:text-orange-500 transition-colors`}>
               <ExternalLink className="w-4 h-4" />
             </div>
           )}
           {trend && (
-            <div className={`flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full backdrop-blur-md ${
+            <div className={`flex items-center text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full backdrop-blur-md ${
               trend === 'up' ? 'text-emerald-400 bg-emerald-400/10' : 
               trend === 'down' ? 'text-rose-400 bg-rose-400/10' : 'text-slate-400 bg-slate-400/10'
             }`}>
@@ -62,16 +58,17 @@ export const StatCard: React.FC<StatCardProps> = ({
         </div>
       </div>
       
-      <h3 className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-xs font-bold uppercase tracking-widest mb-1`}>
+      <h3 className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
         {title}
       </h3>
       
       <div className="flex items-baseline justify-between gap-2">
-        <div className={`text-3xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>{value}</div>
+        <div className="text-3xl font-black tracking-tighter text-white">{value}</div>
       </div>
       
       {subValue && (
-        <div className={`mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'} text-[10px] font-medium uppercase tracking-tight`}>
+        <div className="mt-3 text-slate-500 text-[10px] font-bold uppercase tracking-tight flex items-center gap-1.5">
+          <span className="w-1 h-1 rounded-full bg-slate-700"></span>
           {subValue}
         </div>
       )}
