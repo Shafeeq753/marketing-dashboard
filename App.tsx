@@ -31,8 +31,10 @@ import {
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
-const aggregateData = (data: MonthlyData[]) => {
+const aggregateData = (data: MonthlyData[]): MonthlyData => {
   const aggregated = data.reduce((acc, curr) => ({
+    month: 'Aggregated',
+    quarter: curr.quarter,
     traffic: acc.traffic + curr.traffic,
     benchmarkVideos: acc.benchmarkVideos + curr.benchmarkVideos,
     newsletters: acc.newsletters + curr.newsletters,
@@ -43,12 +45,15 @@ const aggregateData = (data: MonthlyData[]) => {
     faqPages: (acc.faqPages || 0) + (curr.faqPages || 0),
     glossary: (acc.glossary || 0) + (curr.glossary || 0),
     campaigns: {
-        email: acc.campaigns.email + curr.campaigns.email,
-        linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
-        other: acc.campaigns.other + curr.campaigns.other
+      email: acc.campaigns.email + curr.campaigns.email,
+      linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
+      other: acc.campaigns.other + curr.campaigns.other
     },
+    activities: [...acc.activities, ...curr.activities],
     totalVideosOnSite: curr.totalVideosOnSite 
   }), { 
+    month: '',
+    quarter: '',
     traffic: 0, 
     benchmarkVideos: 0, 
     newsletters: 0, 
@@ -59,6 +64,7 @@ const aggregateData = (data: MonthlyData[]) => {
     faqPages: 0,
     glossary: 0,
     campaigns: { email: 0, linkedin: 0, other: 0 },
+    activities: [],
     totalVideosOnSite: 0
   });
 
@@ -113,21 +119,23 @@ const App: React.FC = () => {
   }, [currentDataList, selectedPeriodType, selectedValue]);
 
   const prevAggregates = useMemo(() => {
+    const chronologicalQuarters = Array.from(new Set(MONTHLY_DATA.map(d => d.quarter)));
+    
     if (selectedPeriodType === 'quarter') {
-      const idx = quarters.indexOf(selectedValue);
+      const idx = chronologicalQuarters.indexOf(selectedValue);
       if (idx > 0) {
-        const prevQuarter = quarters[idx - 1];
+        const prevQuarter = chronologicalQuarters[idx - 1];
         const prevData = MONTHLY_DATA.filter(d => d.quarter === prevQuarter);
         return aggregateData(prevData);
       }
     } else {
-      const idx = months.indexOf(selectedValue);
+      const idx = MONTHLY_DATA.findIndex(d => d.month === selectedValue);
       if (idx > 0) {
         return MONTHLY_DATA[idx - 1];
       }
     }
     return null;
-  }, [selectedPeriodType, selectedValue, quarters, months]);
+  }, [selectedPeriodType, selectedValue]);
 
   const trafficDisplayValue = useMemo(() => {
     if (selectedPeriodType === 'quarter' && currentDataList.length > 0) {
@@ -139,11 +147,14 @@ const App: React.FC = () => {
   const trafficPrevValue = useMemo(() => {
     if (!prevAggregates) return null;
     if (selectedPeriodType === 'quarter') {
-      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === quarters[quarters.indexOf(selectedValue) - 1]).length;
+      const chronologicalQuarters = Array.from(new Set(MONTHLY_DATA.map(d => d.quarter)));
+      const idx = chronologicalQuarters.indexOf(selectedValue);
+      const prevQuarter = chronologicalQuarters[idx - 1];
+      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === prevQuarter).length;
       return Math.round(prevAggregates.traffic / (prevMonthsCount || 1));
     }
     return prevAggregates.traffic;
-  }, [selectedPeriodType, prevAggregates, selectedValue, quarters]);
+  }, [selectedPeriodType, prevAggregates, selectedValue]);
 
   const calculateTrend = (current: number, previous: number | undefined | null) => {
     if (previous === undefined || previous === null || previous === 0) return { trend: 'neutral' as const, value: '-' };
