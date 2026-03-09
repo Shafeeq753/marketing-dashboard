@@ -78,5 +78,25 @@ export const MONTHLY_DATA: MonthlyData[] = [
     blogs: 52, // Updated to 52 total (36 agency pillar + 16 listicles)
     campaigns: { email: 0, linkedin: 0, other: 0 },
     activities: ['Website edits', 'Indexing issues']
+  },
+  {
+    month: 'February',
+    quarter: 'Q4',
+    traffic: 990,
+    benchmarkVideos: 236,
+    totalVideosOnSite: 1059,
+    newsletters: 6,
+    blogs: 14,
+    caseStudies: 9,
+    servicePages: 1,
+    campaigns: { email: 824, linkedin: 412, other: 0 },
+    activities: [
+      'AI Chatbot',
+      'SEO Machine',
+      'MODEX newsletter',
+      'Google ads for modex',
+      'Benchmark QC',
+      'Manual LinkedIn to 400 people'
+    ]
   }
 ];

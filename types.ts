@@ -13,6 +13,11 @@ export interface MonthlyData {
   totalVideosOnSite: number; // The running total of active videos on the site
   newsletters: number;
   blogs: number;
+  caseStudies?: number;
+  servicePages?: number;
+  locationPages?: number;
+  faqPages?: number;
+  glossary?: number;
   campaigns: CampaignMetrics;
   activities: string[];
 }

@@ -113,6 +113,11 @@ export const NewslettersChart: React.FC<ChartProps> = ({ data, isDark = true }) 
 };
 
 export const BlogsChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
+  const chartData = data.map(d => ({
+    ...d,
+    totalPublishedPages: d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) + (d.faqPages || 0) + (d.glossary || 0)
+  }));
+
   const axisColor = isDark ? 'rgba(255,255,255,0.3)' : '#64748b';
   const gridColor = isDark ? 'rgba(255,255,255,0.05)' : '#e2e8f0';
 
@@ -120,12 +125,12 @@ export const BlogsChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
     <div className="h-[220px] w-full">
       <h3 className="text-[10px] font-black text-yellow-500 uppercase tracking-[0.2em] mb-4">Site Expansion</h3>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+        <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
           <XAxis dataKey="month" stroke={axisColor} fontSize={10} fontWeight={700} tickLine={false} axisLine={false} />
           <YAxis stroke={axisColor} fontSize={10} fontWeight={700} tickLine={false} axisLine={false} allowDecimals={false} />
           <Tooltip content={<CustomTooltip isDark={isDark} />} cursor={{fill: 'rgba(255,255,255,0.05)', radius: 10}} />
-          <Bar dataKey="blogs" name="New Pages" fill="#fdba74" radius={[10, 10, 0, 0]} barSize={data.length === 1 ? 40 : 25} />
+          <Bar dataKey="totalPublishedPages" name="New Pages" fill="#fdba74" radius={[10, 10, 0, 0]} barSize={data.length === 1 ? 40 : 25} />
         </BarChart>
       </ResponsiveContainer>
     </div>

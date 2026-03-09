@@ -12,6 +12,7 @@ import {
 import { ActivityFeed } from './components/ActivityFeed';
 import { CrawlStatsModal } from './components/CrawlStatsModal';
 import { WebsiteEditsModal } from './components/WebsiteEditsModal';
+import { ChatbotModal } from './components/ChatbotModal';
 import { 
   Users, 
   Video, 
@@ -36,6 +37,11 @@ const aggregateData = (data: MonthlyData[]) => {
     benchmarkVideos: acc.benchmarkVideos + curr.benchmarkVideos,
     newsletters: acc.newsletters + curr.newsletters,
     blogs: acc.blogs + curr.blogs,
+    caseStudies: (acc.caseStudies || 0) + (curr.caseStudies || 0),
+    servicePages: (acc.servicePages || 0) + (curr.servicePages || 0),
+    locationPages: (acc.locationPages || 0) + (curr.locationPages || 0),
+    faqPages: (acc.faqPages || 0) + (curr.faqPages || 0),
+    glossary: (acc.glossary || 0) + (curr.glossary || 0),
     campaigns: {
         email: acc.campaigns.email + curr.campaigns.email,
         linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
@@ -47,6 +53,11 @@ const aggregateData = (data: MonthlyData[]) => {
     benchmarkVideos: 0, 
     newsletters: 0, 
     blogs: 0, 
+    caseStudies: 0,
+    servicePages: 0,
+    locationPages: 0,
+    faqPages: 0,
+    glossary: 0,
     campaigns: { email: 0, linkedin: 0, other: 0 },
     totalVideosOnSite: 0
   });
@@ -62,18 +73,19 @@ type PeriodType = 'quarter' | 'month';
 
 const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
-  const [selectedValue, setSelectedValue] = useState<string>('January');
+  const [selectedValue, setSelectedValue] = useState<string>('February');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
   const [isWebsiteEditsModalOpen, setIsWebsiteEditsModalOpen] = useState(false);
+  const [isChatbotModalOpen, setIsChatbotModalOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
-  const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))), []);
-  const months = useMemo(() => MONTHLY_DATA.map(d => d.month), []);
+  const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))).reverse(), []);
+  const months = useMemo(() => MONTHLY_DATA.map(d => d.month).reverse(), []);
 
   const currentDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
@@ -156,6 +168,8 @@ const App: React.FC = () => {
       setIsCrawlModalOpen(true);
     } else if (act.includes('website edits')) {
       setIsWebsiteEditsModalOpen(true);
+    } else if (act.includes('ai chatbot')) {
+      setIsChatbotModalOpen(true);
     }
   };
 
@@ -270,6 +284,7 @@ const App: React.FC = () => {
 
       <CrawlStatsModal isOpen={isCrawlModalOpen} onClose={() => setIsCrawlModalOpen(false)} isDark={true} />
       <WebsiteEditsModal isOpen={isWebsiteEditsModalOpen} onClose={() => setIsWebsiteEditsModalOpen(false)} isDark={true} />
+      <ChatbotModal isOpen={isChatbotModalOpen} onClose={() => setIsChatbotModalOpen(false)} isDark={true} />
 
       {/* Content Deep Dive Modal */}
       {isModalOpen && (
@@ -292,22 +307,22 @@ const App: React.FC = () => {
 
             <div className="px-12 pb-12 space-y-12 max-h-[70vh] overflow-y-auto custom-scrollbar pt-8">
               
-              {/* EXPLAINER VIDEO AGENCY PILLAR Section */}
+              {/* Content Breakdown Section */}
               <section className="space-y-8">
                 <div className="flex items-center gap-4">
                   <div className="h-5 w-1.5 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.8)]"></div>
-                  <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">EXPLAINER VIDEO AGENCY PILLAR</h4>
+                  <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">PUBLISHED CONTENT BREAKDOWN</h4>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-4">
                   {[
-                    { label: 'CASE STUDIES', value: 5, icon: <FileText className="w-4 h-4" /> },
-                    { label: 'SERVICE PAGE', value: 1, icon: <LayoutGrid className="w-4 h-4" /> },
-                    { label: 'LOCATION PAGES', value: 5, icon: <Tag className="w-4 h-4" /> },
-                    { label: 'BLOGS', value: 10, icon: <FileText className="w-4 h-4" /> },
-                    { label: 'FAQ PAGES', value: 5, icon: <Zap className="w-4 h-4" /> },
-                    { label: 'GLOSSARY', value: 10, icon: <Layers className="w-4 h-4" /> },
-                  ].map((item, i) => (
+                    { label: 'CASE STUDIES', value: (currentAggregates as any).caseStudies || 0, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'SERVICE PAGE', value: (currentAggregates as any).servicePages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
+                    { label: 'LOCATION PAGES', value: (currentAggregates as any).locationPages || 0, icon: <Tag className="w-4 h-4" /> },
+                    { label: 'BLOGS', value: (currentAggregates as any).blogs || 0, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'FAQ PAGES', value: (currentAggregates as any).faqPages || 0, icon: <Zap className="w-4 h-4" /> },
+                    { label: 'GLOSSARY', value: (currentAggregates as any).glossary || 0, icon: <Layers className="w-4 h-4" /> },
+                  ].filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
                         <span className="text-3xl font-black text-white leading-none tracking-tighter group-hover:scale-110 transition-transform origin-left">{item.value}</span>
@@ -320,40 +335,15 @@ const App: React.FC = () => {
 
                 {/* Total Distribution Bar */}
                 <div className="bg-orange-600/10 border border-orange-500/20 rounded-2xl p-4 flex justify-between items-center px-8 shadow-inner">
-                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PILLAR DISTRIBUTION</span>
-                   <span className="text-2xl font-black text-orange-500 tracking-tighter">36</span>
-                </div>
-              </section>
-
-              {/* Curated Listicles Section */}
-              <section className="space-y-8 pt-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="h-5 w-1.5 bg-[#8b5cf6] rounded-full shadow-[0_0_15px_rgba(139,92,246,0.8)]"></div>
-                    <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">CURATED LISTICLES</h4>
-                  </div>
-                  <span className="px-5 py-2 rounded-full text-[9px] font-black uppercase tracking-widest bg-[#8b5cf6] text-white shadow-2xl shadow-[#8b5cf6]/40">
-                    16 ITEMS TOTAL
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { label: 'INDUSTRY VERTICAL', icon: <Tag className="w-4 h-4" />, items: ['AI', 'Cyber', 'FinTech', 'Health', 'Bio', 'Clean', 'EdTech', 'Data'] },
-                    { label: 'VIDEO FORMAT', icon: <MonitorPlay className="w-4 h-4" />, items: ['Explainer', 'Brand'] },
-                    { label: 'STYLE MATRIX', icon: <LayoutGrid className="w-4 h-4" />, items: ['2D', '3D', 'Motion', 'Live'] }
-                  ].map((cat, i) => (
-                    <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 space-y-4 group hover:bg-white/10 transition-colors">
-                      <div className="flex items-center gap-2 text-[10px] font-black text-orange-400 uppercase tracking-widest opacity-80 group-hover:opacity-100">
-                         {cat.icon} {cat.label}
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {cat.items.map(t => (
-                          <span key={t} className="px-2.5 py-1 rounded-lg bg-white/5 text-[9px] font-bold text-slate-400 group-hover:text-slate-200 transition-colors">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PUBLISHED PAGES</span>
+                   <span className="text-2xl font-black text-orange-500 tracking-tighter">
+                    {((currentAggregates as any).caseStudies || 0) + 
+                     ((currentAggregates as any).servicePages || 0) + 
+                     ((currentAggregates as any).locationPages || 0) + 
+                     ((currentAggregates as any).blogs || 0) + 
+                     ((currentAggregates as any).faqPages || 0) + 
+                     ((currentAggregates as any).glossary || 0)}
+                   </span>
                 </div>
               </section>
 
