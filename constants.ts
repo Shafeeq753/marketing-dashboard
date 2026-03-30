@@ -71,24 +71,41 @@ export const MONTHLY_DATA: MonthlyData[] = [
   {
     month: 'January',
     quarter: 'Q4',
-    traffic: 1600,
+    traffic: 2172,
     benchmarkVideos: 34,
     totalVideosOnSite: 938,
     newsletters: 5,
     blogs: 52, // Updated to 52 total (36 agency pillar + 16 listicles)
+    trafficBreakdown: [
+      { channel: 'Organic Search', sessions: 985, pageviews: 2774, users: 738 },
+      { channel: 'Direct', sessions: 809, pageviews: 1896, users: 693 },
+      { channel: 'Referral', sessions: 292, pageviews: 765, users: 212 },
+      { channel: 'Organic Social', sessions: 39, pageviews: 114, users: 28 },
+      { channel: 'Unassigned', sessions: 30, pageviews: 71, users: 27 },
+      { channel: 'Organic Video', sessions: 17, pageviews: 44, users: 8 },
+    ],
     campaigns: { email: 0, linkedin: 0, other: 0 },
     activities: ['Website edits', 'Indexing issues']
   },
   {
     month: 'February',
     quarter: 'Q4',
-    traffic: 990,
+    traffic: 1406,
     benchmarkVideos: 236,
     totalVideosOnSite: 1059,
     newsletters: 6,
     blogs: 14,
     caseStudies: 9,
     servicePages: 1,
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 626, pageviews: 1143, users: 536 },
+      { channel: 'Organic Search', sessions: 485, pageviews: 1317, users: 324 },
+      { channel: 'Referral', sessions: 231, pageviews: 580, users: 162 },
+      { channel: 'Unassigned', sessions: 39, pageviews: 69, users: 38 },
+      { channel: 'Organic Social', sessions: 15, pageviews: 46, users: 11 },
+      { channel: 'Organic Video', sessions: 5, pageviews: 24, users: 4 },
+      { channel: 'Paid Search', sessions: 5, pageviews: 12, users: 5 },
+    ],
     campaigns: { email: 824, linkedin: 412, other: 0 },
     activities: [
       'AI Chatbot',
@@ -97,6 +114,35 @@ export const MONTHLY_DATA: MonthlyData[] = [
       'Google ads for modex',
       'Benchmark QC',
       'Manual LinkedIn to 400 people'
+    ]
+  },
+  {
+    month: 'March',
+    quarter: 'Q4',
+    traffic: 3042,
+    benchmarkVideos: 123,
+    totalVideosOnSite: 1163,
+    newsletters: 0,
+    blogs: 0,
+    pricingPages: 1,
+    vsPages: 10,
+    decliningPages: 6,
+    commercialKeywordPages: 10,
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 2064, pageviews: 5891, users: 1874 },
+      { channel: 'Organic Search', sessions: 485, pageviews: 1297, users: 236 },
+      { channel: 'Referral', sessions: 279, pageviews: 579, users: 201 },
+      { channel: 'Unassigned', sessions: 199, pageviews: 397, users: 190 },
+      { channel: 'Organic Social', sessions: 12, pageviews: 30, users: 10 },
+      { channel: 'Organic Video', sessions: 2, pageviews: 14, users: 1 },
+    ],
+    campaigns: { email: 0, linkedin: 0, other: 0 },
+    activities: [
+      'Security bug and updates',
+      'VIH and highs - honors - tools - update',
+      'Backlink and event strategy',
+      'FAQ & glossary edits',
+      'Schema and orphan pages audit'
     ]
   }
 ];

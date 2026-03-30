@@ -13,6 +13,8 @@ import { ActivityFeed } from './components/ActivityFeed';
 import { CrawlStatsModal } from './components/CrawlStatsModal';
 import { WebsiteEditsModal } from './components/WebsiteEditsModal';
 import { ChatbotModal } from './components/ChatbotModal';
+import { TrafficBreakdownModal } from './components/TrafficBreakdownModal';
+import { SecurityModal } from './components/SecurityModal';
 import { 
   Users, 
   Video, 
@@ -44,6 +46,10 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     locationPages: (acc.locationPages || 0) + (curr.locationPages || 0),
     faqPages: (acc.faqPages || 0) + (curr.faqPages || 0),
     glossary: (acc.glossary || 0) + (curr.glossary || 0),
+    pricingPages: (acc.pricingPages || 0) + (curr.pricingPages || 0),
+    vsPages: (acc.vsPages || 0) + (curr.vsPages || 0),
+    decliningPages: (acc.decliningPages || 0) + (curr.decliningPages || 0),
+    commercialKeywordPages: (acc.commercialKeywordPages || 0) + (curr.commercialKeywordPages || 0),
     campaigns: {
       email: acc.campaigns.email + curr.campaigns.email,
       linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
@@ -63,6 +69,10 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     locationPages: 0,
     faqPages: 0,
     glossary: 0,
+    pricingPages: 0,
+    vsPages: 0,
+    decliningPages: 0,
+    commercialKeywordPages: 0,
     campaigns: { email: 0, linkedin: 0, other: 0 },
     activities: [],
     totalVideosOnSite: 0
@@ -79,12 +89,14 @@ type PeriodType = 'quarter' | 'month';
 
 const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
-  const [selectedValue, setSelectedValue] = useState<string>('February');
+  const [selectedValue, setSelectedValue] = useState<string>('March');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
   const [isWebsiteEditsModalOpen, setIsWebsiteEditsModalOpen] = useState(false);
   const [isChatbotModalOpen, setIsChatbotModalOpen] = useState(false);
+  const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
@@ -164,9 +176,17 @@ const App: React.FC = () => {
     return { trend: trend as 'up' | 'down' | 'neutral', value: `${Math.abs(Number(percent))}%` };
   };
 
+  const getTotalPages = (d: MonthlyData) =>
+    d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) +
+    (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) +
+    (d.decliningPages || 0) + (d.commercialKeywordPages || 0);
+
+  const currentTotalPages = getTotalPages(currentAggregates);
+  const prevTotalPages = prevAggregates ? getTotalPages(prevAggregates) : null;
+
   const trafficTrend = calculateTrend(trafficDisplayValue, trafficPrevValue);
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
-  const blogTrend = calculateTrend(currentAggregates.blogs, prevAggregates?.blogs);
+  const blogTrend = calculateTrend(currentTotalPages, prevTotalPages);
 
   const handleSidebarClick = (type: PeriodType, value: string) => {
     setSelectedPeriodType(type);
@@ -181,6 +201,8 @@ const App: React.FC = () => {
       setIsWebsiteEditsModalOpen(true);
     } else if (act.includes('ai chatbot')) {
       setIsChatbotModalOpen(true);
+    } else if (act.includes('security bug')) {
+      setIsSecurityModalOpen(true);
     }
   };
 
@@ -261,9 +283,9 @@ const App: React.FC = () => {
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-            <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} />
+            <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} isClickable={true} onClick={() => setIsTrafficModalOpen(true)} />
             <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
-            <StatCard title="New Published pages" value={currentAggregates.blogs} subValue={prevAggregates ? `vs prev: ${prevAggregates.blogs}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
+            <StatCard title="New Published pages" value={currentTotalPages} subValue={prevTotalPages !== null ? `vs prev: ${prevTotalPages}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
             <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
           </div>
 
@@ -296,6 +318,8 @@ const App: React.FC = () => {
       <CrawlStatsModal isOpen={isCrawlModalOpen} onClose={() => setIsCrawlModalOpen(false)} isDark={true} />
       <WebsiteEditsModal isOpen={isWebsiteEditsModalOpen} onClose={() => setIsWebsiteEditsModalOpen(false)} isDark={true} />
       <ChatbotModal isOpen={isChatbotModalOpen} onClose={() => setIsChatbotModalOpen(false)} isDark={true} />
+      <TrafficBreakdownModal isOpen={isTrafficModalOpen} onClose={() => setIsTrafficModalOpen(false)} isDark={true} data={MONTHLY_DATA} selectedMonth={selectedPeriodType === 'month' ? selectedValue : ''} />
+      <SecurityModal isOpen={isSecurityModalOpen} onClose={() => setIsSecurityModalOpen(false)} isDark={true} />
 
       {/* Content Deep Dive Modal */}
       {isModalOpen && (
@@ -333,6 +357,10 @@ const App: React.FC = () => {
                     { label: 'BLOGS', value: (currentAggregates as any).blogs || 0, icon: <FileText className="w-4 h-4" /> },
                     { label: 'FAQ PAGES', value: (currentAggregates as any).faqPages || 0, icon: <Zap className="w-4 h-4" /> },
                     { label: 'GLOSSARY', value: (currentAggregates as any).glossary || 0, icon: <Layers className="w-4 h-4" /> },
+                    { label: 'PRICING PAGES', value: (currentAggregates as any).pricingPages || 0, icon: <Tag className="w-4 h-4" /> },
+                    { label: 'VS / COMPARISON', value: (currentAggregates as any).vsPages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
+                    { label: 'DECLINING PAGES', value: (currentAggregates as any).decliningPages || 0, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'COMMERCIAL KEYWORDS', value: (currentAggregates as any).commercialKeywordPages || 0, icon: <Zap className="w-4 h-4" /> },
                   ].filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
@@ -348,12 +376,16 @@ const App: React.FC = () => {
                 <div className="bg-orange-600/10 border border-orange-500/20 rounded-2xl p-4 flex justify-between items-center px-8 shadow-inner">
                    <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PUBLISHED PAGES</span>
                    <span className="text-2xl font-black text-orange-500 tracking-tighter">
-                    {((currentAggregates as any).caseStudies || 0) + 
-                     ((currentAggregates as any).servicePages || 0) + 
-                     ((currentAggregates as any).locationPages || 0) + 
-                     ((currentAggregates as any).blogs || 0) + 
-                     ((currentAggregates as any).faqPages || 0) + 
-                     ((currentAggregates as any).glossary || 0)}
+                    {((currentAggregates as any).caseStudies || 0) +
+                     ((currentAggregates as any).servicePages || 0) +
+                     ((currentAggregates as any).locationPages || 0) +
+                     ((currentAggregates as any).blogs || 0) +
+                     ((currentAggregates as any).faqPages || 0) +
+                     ((currentAggregates as any).glossary || 0) +
+                     ((currentAggregates as any).pricingPages || 0) +
+                     ((currentAggregates as any).vsPages || 0) +
+                     ((currentAggregates as any).decliningPages || 0) +
+                     ((currentAggregates as any).commercialKeywordPages || 0)}
                    </span>
                 </div>
               </section>

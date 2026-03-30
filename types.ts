@@ -4,6 +4,13 @@ export interface CampaignMetrics {
   other: number;
 }
 
+export interface TrafficChannel {
+  channel: string;
+  sessions: number;
+  pageviews: number;
+  users: number;
+}
+
 export interface MonthlyData {
   month: string;
   quarter: string;
@@ -18,6 +25,11 @@ export interface MonthlyData {
   locationPages?: number;
   faqPages?: number;
   glossary?: number;
+  pricingPages?: number;
+  vsPages?: number;
+  decliningPages?: number;
+  commercialKeywordPages?: number;
+  trafficBreakdown?: TrafficChannel[];
   campaigns: CampaignMetrics;
   activities: string[];
 }
