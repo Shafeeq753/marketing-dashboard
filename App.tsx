@@ -15,10 +15,11 @@ import { WebsiteEditsModal } from './components/WebsiteEditsModal';
 import { ChatbotModal } from './components/ChatbotModal';
 import { TrafficBreakdownModal } from './components/TrafficBreakdownModal';
 import { SecurityModal } from './components/SecurityModal';
-import { 
-  Users, 
-  Video, 
-  Layers, 
+import { AnnualOverview } from './components/AnnualOverview';
+import {
+  Users,
+  Video,
+  Layers,
   BarChart3,
   CalendarDays,
   ChevronRight,
@@ -29,7 +30,8 @@ import {
   Tag,
   MonitorPlay,
   Zap,
-  LayoutGrid
+  LayoutGrid,
+  Trophy
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -85,7 +87,7 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
   return aggregated;
 };
 
-type PeriodType = 'quarter' | 'month';
+type PeriodType = 'quarter' | 'month' | 'annual';
 
 const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
@@ -222,6 +224,20 @@ const App: React.FC = () => {
           )}
         </div>
         <nav className="flex-1 px-6 space-y-12 overflow-y-auto custom-scrollbar pt-6">
+          {/* Annual Review */}
+          <div>
+            <h3 className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-6 px-4 ${isSidebarCollapsed ? 'text-center' : ''}`}>
+              {isSidebarCollapsed ? 'YR' : 'Annual Report'}
+            </h3>
+            <ul className="space-y-3">
+              <li>
+                <button onClick={() => handleSidebarClick('annual', '2025-2026')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'annual' ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-500 border border-orange-500/20 shadow-lg shadow-orange-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                  <span className="flex items-center gap-4"><Trophy className="w-5 h-5 opacity-80" />{!isSidebarCollapsed && '2025 — 2026'}</span>
+                  {!isSidebarCollapsed && selectedPeriodType === 'annual' && <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)] animate-pulse"></div>}
+                </button>
+              </li>
+            </ul>
+          </div>
           <div>
             <h3 className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-6 px-4 ${isSidebarCollapsed ? 'text-center' : ''}`}>
               {isSidebarCollapsed ? 'PER' : 'Strategy Periods'}
@@ -260,58 +276,82 @@ const App: React.FC = () => {
       {/* Main Content Area */}
       <main className={`flex-1 ${isSidebarCollapsed ? 'lg:ml-32' : 'lg:ml-[22rem]'} p-6 md:p-12 transition-all duration-700`}>
         <div className="max-w-7xl mx-auto space-y-12">
-          <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="px-4 py-2 text-[9px] font-black text-white bg-accent rounded-full uppercase tracking-widest shadow-2xl shadow-accent/40 animate-pulse">Insight Live</span>
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Ready</span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <h1 className="text-7xl font-black tracking-tighter transition-all text-white">
-                  <span className="opacity-20">{selectedValue.substring(0, 3)}</span> Overview.
-                </h1>
-              </div>
-              <p className="text-slate-500 text-sm font-bold tracking-tight">
-                Deep diving into {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`} strategy data
-              </p>
-            </div>
-            <div className="flex items-center">
-              <button className="group flex items-center gap-4 bg-white text-slate-950 px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_60px_-15px_rgba(255,255,255,0.3)] active:scale-95">
-                <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" /> Upload Data
-              </button>
-            </div>
-          </header>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
-            <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} isClickable={true} onClick={() => setIsTrafficModalOpen(true)} />
-            <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
-            <StatCard title="New Published pages" value={currentTotalPages} subValue={prevTotalPages !== null ? `vs prev: ${prevTotalPages}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
-            <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
-            <div className="lg:col-span-2 space-y-10">
-              <div className="glass-card rounded-[3rem] p-12 shadow-2xl overflow-hidden relative group">
-                <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-125 transition-transform duration-1000">
-                  <Zap className="w-64 h-64" />
+          {selectedPeriodType === 'annual' ? (
+            <>
+              <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-4 py-2 text-[9px] font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 rounded-full uppercase tracking-widest shadow-2xl shadow-orange-500/40 animate-pulse">Annual Report</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">2025 — 2026</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <h1 className="text-7xl font-black tracking-tighter transition-all text-white">
+                      <span className="opacity-20">YR</span> Annual.
+                    </h1>
+                  </div>
+                  <p className="text-slate-500 text-sm font-bold tracking-tight">
+                    Complete year-over-year performance and milestone review
+                  </p>
                 </div>
-                <TrafficChart data={chartDataList} isDark={true} />
+              </header>
+              <AnnualOverview isDark={true} />
+            </>
+          ) : (
+            <>
+              <header className="flex flex-col md:flex-row md:items-center justify-between gap-8 animate-in fade-in slide-in-from-top-4 duration-1000">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-4 py-2 text-[9px] font-black text-white bg-accent rounded-full uppercase tracking-widest shadow-2xl shadow-accent/40 animate-pulse">Insight Live</span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">System Ready</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <h1 className="text-7xl font-black tracking-tighter transition-all text-white">
+                      <span className="opacity-20">{selectedValue.substring(0, 3)}</span> Overview.
+                    </h1>
+                  </div>
+                  <p className="text-slate-500 text-sm font-bold tracking-tight">
+                    Deep diving into {selectedPeriodType === 'quarter' ? `Quarter ${selectedValue}` : `Month of ${selectedValue}`} strategy data
+                  </p>
+                </div>
+                <div className="flex items-center">
+                  <button className="group flex items-center gap-4 bg-white text-slate-950 px-10 py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:translate-y-[-4px] hover:shadow-[0_20px_60px_-15px_rgba(255,255,255,0.3)] active:scale-95">
+                    <Plus className="w-5 h-5 transition-transform group-hover:rotate-90" /> Upload Data
+                  </button>
+                </div>
+              </header>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
+                <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} isClickable={true} onClick={() => setIsTrafficModalOpen(true)} />
+                <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
+                <StatCard title="New Published pages" value={currentTotalPages} subValue={prevTotalPages !== null ? `vs prev: ${prevTotalPages}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
+                <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
-                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+                <div className="lg:col-span-2 space-y-10">
+                  <div className="glass-card rounded-[3rem] p-12 shadow-2xl overflow-hidden relative group">
+                    <div className="absolute top-0 right-0 p-12 opacity-[0.05] pointer-events-none group-hover:scale-125 transition-transform duration-1000">
+                      <Zap className="w-64 h-64" />
+                    </div>
+                    <TrafficChart data={chartDataList} isDark={true} />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="glass-card rounded-[3rem] p-10 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
+                    <div className="glass-card rounded-[3rem] p-10 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="glass-card rounded-[3rem] p-10 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
+                    <div className="glass-card rounded-[3rem] p-10 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
+                  </div>
+                </div>
+                <div className="lg:col-span-1">
+                  <div className="sticky top-10">
+                    <ActivityFeed data={currentDataList} isDark={true} onActivityClick={handleActivityClick} />
+                  </div>
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
-                <div className="glass-card rounded-[3rem] p-10 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
-              </div>
-            </div>
-            <div className="lg:col-span-1">
-              <div className="sticky top-10">
-                <ActivityFeed data={currentDataList} isDark={true} onActivityClick={handleActivityClick} />
-              </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
       </main>
 
