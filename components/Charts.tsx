@@ -115,7 +115,7 @@ export const NewslettersChart: React.FC<ChartProps> = ({ data, isDark = true }) 
 export const BlogsChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
   const chartData = data.map(d => ({
     ...d,
-    totalPublishedPages: d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) + (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) + (d.decliningPages || 0) + (d.commercialKeywordPages || 0)
+    totalPublishedPages: d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) + (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) + (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0)
   }));
 
   const axisColor = isDark ? 'rgba(255,255,255,0.3)' : '#64748b';

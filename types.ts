@@ -29,12 +29,13 @@ export interface MonthlyData {
   vsPages?: number;
   decliningPages?: number;
   commercialKeywordPages?: number;
+  exhibitorPages?: number;
   trafficBreakdown?: TrafficChannel[];
   campaigns: CampaignMetrics;
   activities: string[];
 }
 
-export type Quarter = 'Q2' | 'Q3' | 'Q4';
+export type Quarter = 'Q1' | 'Q2' | 'Q3' | 'Q4';
 
 export interface DashboardState {
   selectedQuarter: Quarter;

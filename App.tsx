@@ -52,6 +52,7 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     vsPages: (acc.vsPages || 0) + (curr.vsPages || 0),
     decliningPages: (acc.decliningPages || 0) + (curr.decliningPages || 0),
     commercialKeywordPages: (acc.commercialKeywordPages || 0) + (curr.commercialKeywordPages || 0),
+    exhibitorPages: (acc.exhibitorPages || 0) + (curr.exhibitorPages || 0),
     campaigns: {
       email: acc.campaigns.email + curr.campaigns.email,
       linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
@@ -75,6 +76,7 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     vsPages: 0,
     decliningPages: 0,
     commercialKeywordPages: 0,
+    exhibitorPages: 0,
     campaigns: { email: 0, linkedin: 0, other: 0 },
     activities: [],
     totalVideosOnSite: 0
@@ -91,7 +93,7 @@ type PeriodType = 'quarter' | 'month' | 'annual';
 
 const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
-  const [selectedValue, setSelectedValue] = useState<string>('March');
+  const [selectedValue, setSelectedValue] = useState<string>('April');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
@@ -181,7 +183,7 @@ const App: React.FC = () => {
   const getTotalPages = (d: MonthlyData) =>
     d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) +
     (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) +
-    (d.decliningPages || 0) + (d.commercialKeywordPages || 0);
+    (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0);
 
   const currentTotalPages = getTotalPages(currentAggregates);
   const prevTotalPages = prevAggregates ? getTotalPages(prevAggregates) : null;
@@ -401,6 +403,7 @@ const App: React.FC = () => {
                     { label: 'VS / COMPARISON', value: (currentAggregates as any).vsPages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
                     { label: 'DECLINING PAGES', value: (currentAggregates as any).decliningPages || 0, icon: <FileText className="w-4 h-4" /> },
                     { label: 'COMMERCIAL KEYWORDS', value: (currentAggregates as any).commercialKeywordPages || 0, icon: <Zap className="w-4 h-4" /> },
+                    { label: 'EXHIBITOR PAGES', value: (currentAggregates as any).exhibitorPages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
                   ].filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
@@ -425,7 +428,8 @@ const App: React.FC = () => {
                      ((currentAggregates as any).pricingPages || 0) +
                      ((currentAggregates as any).vsPages || 0) +
                      ((currentAggregates as any).decliningPages || 0) +
-                     ((currentAggregates as any).commercialKeywordPages || 0)}
+                     ((currentAggregates as any).commercialKeywordPages || 0) +
+                     ((currentAggregates as any).exhibitorPages || 0)}
                    </span>
                 </div>
               </section>

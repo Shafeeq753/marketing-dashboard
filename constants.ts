@@ -144,5 +144,23 @@ export const MONTHLY_DATA: MonthlyData[] = [
       'FAQ & glossary edits',
       'Schema and orphan pages audit'
     ]
+  },
+  {
+    month: 'April',
+    quarter: 'Q1',
+    traffic: 3271,
+    benchmarkVideos: 193,
+    totalVideosOnSite: 1335,
+    newsletters: 4,
+    blogs: 19, // 1 pillar + 10 cluster + 8 listicle
+    faqPages: 5,
+    servicePages: 1,
+    exhibitorPages: 1,
+    campaigns: { email: 574, linkedin: 511, other: 335 },
+    activities: [
+      '8 automated newsletters added',
+      '50 guest posts (pilot project)',
+      '35 backlink directories added'
+    ]
   }
 ];
