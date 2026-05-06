@@ -152,7 +152,8 @@ export const MONTHLY_DATA: MonthlyData[] = [
     benchmarkVideos: 193,
     totalVideosOnSite: 1335,
     newsletters: 4,
-    blogs: 19, // 1 pillar + 10 cluster + 8 listicle
+    blogs: 11, // 1 pillar + 10 cluster
+    listicleBlogs: 8,
     faqPages: 5,
     servicePages: 1,
     exhibitorPages: 1,

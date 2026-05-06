@@ -30,6 +30,7 @@ export interface MonthlyData {
   decliningPages?: number;
   commercialKeywordPages?: number;
   exhibitorPages?: number;
+  listicleBlogs?: number;
   trafficBreakdown?: TrafficChannel[];
   campaigns: CampaignMetrics;
   activities: string[];
