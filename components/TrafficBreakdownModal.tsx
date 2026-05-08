@@ -64,11 +64,11 @@ export const TrafficBreakdownModal: React.FC<TrafficBreakdownModalProps> = ({ is
 
   // Calculate totals
   const totals = breakdown.reduce(
-    (acc, ch) => ({ sessions: acc.sessions + ch.sessions, pageviews: acc.pageviews + ch.pageviews, users: acc.users + ch.users }),
+    (acc, ch) => ({ sessions: acc.sessions + ch.sessions, pageviews: acc.pageviews + (ch.pageviews ?? 0), users: acc.users + (ch.users ?? 0) }),
     { sessions: 0, pageviews: 0, users: 0 }
   );
   const prevTotals = prevBreakdown.reduce(
-    (acc, ch) => ({ sessions: acc.sessions + ch.sessions, pageviews: acc.pageviews + ch.pageviews, users: acc.users + ch.users }),
+    (acc, ch) => ({ sessions: acc.sessions + ch.sessions, pageviews: acc.pageviews + (ch.pageviews ?? 0), users: acc.users + (ch.users ?? 0) }),
     { sessions: 0, pageviews: 0, users: 0 }
   );
 
@@ -185,11 +185,11 @@ export const TrafficBreakdownModal: React.FC<TrafficBreakdownModalProps> = ({ is
                       </div>
                       <div>
                         <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Pageviews</div>
-                        <div className="text-xl font-black text-slate-300 tracking-tight">{ch.pageviews.toLocaleString()}</div>
+                        <div className="text-xl font-black text-slate-300 tracking-tight">{ch.pageviews != null ? ch.pageviews.toLocaleString() : '—'}</div>
                       </div>
                       <div>
                         <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Users</div>
-                        <div className="text-xl font-black text-slate-300 tracking-tight">{ch.users.toLocaleString()}</div>
+                        <div className="text-xl font-black text-slate-300 tracking-tight">{ch.users != null ? ch.users.toLocaleString() : '—'}</div>
                       </div>
                     </div>
 
@@ -219,7 +219,7 @@ export const TrafficBreakdownModal: React.FC<TrafficBreakdownModalProps> = ({ is
                     <YAxis tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     {monthsWithBreakdown.map((m, i) => {
-                      const colors = ['#64748b', '#f59e0b', '#f26522'];
+                      const colors = ['#64748b', '#f59e0b', '#f26522', '#22c55e', '#a855f7', '#06b6d4'];
                       return <Bar key={m.month} dataKey={m.month} fill={colors[i] || '#f26522'} radius={[4, 4, 0, 0]} />;
                     })}
                   </BarChart>

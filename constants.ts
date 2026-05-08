@@ -157,6 +157,15 @@ export const MONTHLY_DATA: MonthlyData[] = [
     faqPages: 5,
     servicePages: 1,
     exhibitorPages: 1,
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 2367 },
+      { channel: 'Organic Search', sessions: 390 },
+      { channel: 'Unassigned', sessions: 248 },
+      { channel: 'Referral', sessions: 221 },
+      { channel: 'Organic Social', sessions: 12 },
+      { channel: 'Paid Search', sessions: 9 },
+      { channel: 'Organic Video', sessions: 1 },
+    ],
     campaigns: { email: 574, linkedin: 511, other: 335 },
     activities: [
       '8 automated newsletters added',

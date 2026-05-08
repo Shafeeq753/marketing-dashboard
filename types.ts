@@ -7,8 +7,8 @@ export interface CampaignMetrics {
 export interface TrafficChannel {
   channel: string;
   sessions: number;
-  pageviews: number;
-  users: number;
+  pageviews?: number;
+  users?: number;
 }
 
 export interface MonthlyData {
