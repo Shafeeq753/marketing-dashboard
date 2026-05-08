@@ -24,6 +24,7 @@ import {
   CalendarDays,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Plus,
   X,
   FileText,
@@ -31,7 +32,8 @@ import {
   MonitorPlay,
   Zap,
   LayoutGrid,
-  Trophy
+  Trophy,
+  Folder
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -103,13 +105,37 @@ const App: React.FC = () => {
   const [isChatbotModalOpen, setIsChatbotModalOpen] = useState(false);
   const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.classList.add('dark');
   }, []);
 
-  const quarters = useMemo(() => Array.from(new Set(MONTHLY_DATA.map(d => d.quarter))).reverse(), []);
-  const months = useMemo(() => MONTHLY_DATA.map(d => d.month).reverse(), []);
+  // Fiscal year boundary: April starts a new fiscal year. Everything from the
+  // most recent April onwards is "current"; everything before is the 2025–2026 archive.
+  const currentFyStartIdx = useMemo(() => {
+    for (let i = MONTHLY_DATA.length - 1; i >= 0; i--) {
+      if (MONTHLY_DATA[i].month === 'April') return i;
+    }
+    return MONTHLY_DATA.length;
+  }, []);
+
+  const currentMonths = useMemo(
+    () => MONTHLY_DATA.slice(currentFyStartIdx).map(d => d.month).reverse(),
+    [currentFyStartIdx]
+  );
+  const currentQuarters = useMemo(
+    () => Array.from(new Set(MONTHLY_DATA.slice(currentFyStartIdx).map(d => d.quarter))).reverse(),
+    [currentFyStartIdx]
+  );
+  const archivedMonths = useMemo(
+    () => MONTHLY_DATA.slice(0, currentFyStartIdx).map(d => d.month).reverse(),
+    [currentFyStartIdx]
+  );
+  const archivedQuarters = useMemo(
+    () => Array.from(new Set(MONTHLY_DATA.slice(0, currentFyStartIdx).map(d => d.quarter))).reverse(),
+    [currentFyStartIdx]
+  );
 
   const currentDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
@@ -228,41 +254,25 @@ const App: React.FC = () => {
             </div>
           )}
         </div>
-        <nav className="flex-1 px-6 space-y-12 overflow-y-auto custom-scrollbar pt-6">
-          {/* Annual Review */}
+        <nav className="flex-1 px-6 space-y-10 overflow-y-auto custom-scrollbar pt-6">
+          {/* Current Period (top) */}
           <div>
             <h3 className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-6 px-4 ${isSidebarCollapsed ? 'text-center' : ''}`}>
-              {isSidebarCollapsed ? 'YR' : 'Annual Report'}
+              {isSidebarCollapsed ? 'NOW' : 'Current Period'}
             </h3>
-            <ul className="space-y-3">
-              <li>
-                <button onClick={() => handleSidebarClick('annual', '2025-2026')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'annual' ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-500 border border-orange-500/20 shadow-lg shadow-orange-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
-                  <span className="flex items-center gap-4"><Trophy className="w-5 h-5 opacity-80" />{!isSidebarCollapsed && '2025 — 2026'}</span>
-                  {!isSidebarCollapsed && selectedPeriodType === 'annual' && <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)] animate-pulse"></div>}
-                </button>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <h3 className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-6 px-4 ${isSidebarCollapsed ? 'text-center' : ''}`}>
-              {isSidebarCollapsed ? 'PER' : 'Strategy Periods'}
-            </h3>
-            <ul className="space-y-3">
-              {quarters.map(q => (
-                <li key={q}>
-                  <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
-                    <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className={`text-[10px] font-black text-slate-500 uppercase tracking-[0.25em] mb-6 px-4 ${isSidebarCollapsed ? 'text-center' : ''}`}>
-              {isSidebarCollapsed ? 'MON' : 'Monthly Performance'}
-            </h3>
+            {currentQuarters.length > 0 && (
+              <ul className="space-y-3 mb-3">
+                {currentQuarters.map(q => (
+                  <li key={q}>
+                    <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                      <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className={`space-y-1 ${!isSidebarCollapsed ? `pl-4` : ''}`}>
-              {months.map(m => (
+              {currentMonths.map(m => (
                 <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
                   {isSidebarCollapsed ? m.substring(0, 3) : m}
                   {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
@@ -270,6 +280,63 @@ const App: React.FC = () => {
               ))}
             </div>
           </div>
+
+          {/* 2025 — 2026 Archive Folder */}
+          {(archivedMonths.length > 0 || archivedQuarters.length > 0) && (
+            <div>
+              <button
+                onClick={() => setIsArchiveOpen(o => !o)}
+                className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${isArchiveOpen ? 'bg-white/5 text-slate-200' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}
+              >
+                <span className="flex items-center gap-4">
+                  <Folder className="w-5 h-5 opacity-70" />
+                  {!isSidebarCollapsed && '2025 — 2026'}
+                </span>
+                {!isSidebarCollapsed && (
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isArchiveOpen ? 'rotate-180' : ''}`} />
+                )}
+              </button>
+
+              {isArchiveOpen && (
+                <div className={`${isSidebarCollapsed ? 'mt-3' : 'mt-4 ml-3 pl-3 border-l border-white/5'} space-y-6`}>
+                  {/* Annual Report */}
+                  <ul className="space-y-3">
+                    <li>
+                      <button onClick={() => handleSidebarClick('annual', '2025-2026')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'annual' ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-500 border border-orange-500/20 shadow-lg shadow-orange-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                        <span className="flex items-center gap-4"><Trophy className="w-5 h-5 opacity-80" />{!isSidebarCollapsed && 'Annual Report'}</span>
+                        {!isSidebarCollapsed && selectedPeriodType === 'annual' && <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)] animate-pulse"></div>}
+                      </button>
+                    </li>
+                  </ul>
+
+                  {/* Archived Quarters */}
+                  {archivedQuarters.length > 0 && (
+                    <ul className="space-y-3">
+                      {archivedQuarters.map(q => (
+                        <li key={q}>
+                          <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                            <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* Archived Months */}
+                  {archivedMonths.length > 0 && (
+                    <div className={`space-y-1 ${!isSidebarCollapsed ? `pl-4` : ''}`}>
+                      {archivedMonths.map(m => (
+                        <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
+                          {isSidebarCollapsed ? m.substring(0, 3) : m}
+                          {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
         <div className="p-8 flex justify-center border-t border-white/5">
           <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} className="p-4 rounded-2xl glass-card text-slate-500 hover:text-white transition-all hover:scale-110 active:scale-90 shadow-xl shadow-black/20">
