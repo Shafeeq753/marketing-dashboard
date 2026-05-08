@@ -148,7 +148,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
   {
     month: 'April',
     quarter: 'Q1',
-    traffic: 3271,
+    traffic: 3248,
     benchmarkVideos: 193,
     totalVideosOnSite: 1335,
     newsletters: 4,
