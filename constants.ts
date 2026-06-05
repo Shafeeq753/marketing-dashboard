@@ -172,5 +172,33 @@ export const MONTHLY_DATA: MonthlyData[] = [
       '50 guest posts (pilot project)',
       '35 backlink directories added'
     ]
+  },
+  {
+    month: 'May',
+    quarter: 'Q1',
+    traffic: 3602,
+    benchmarkVideos: 13,
+    totalVideosOnSite: 1340, // User provided (some videos deleted)
+    newsletters: 4,
+    blogs: 0,
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 2045 },
+      { channel: 'Referral', sessions: 750 },
+      { channel: 'Organic Search', sessions: 420 },
+      { channel: 'Unassigned', sessions: 406 },
+      { channel: 'Organic Social', sessions: 14 },
+      { channel: 'Organic Video', sessions: 1 },
+    ],
+    // Automate campaign — email manual (Salesforge) 136 + automated 950 = 1086; LinkedIn automated 511
+    campaigns: { email: 1086, linkedin: 511, other: 0 },
+    activities: [
+      'Hiring complete — 4 members onboarded',
+      'SaaS campaign lead expansion completed',
+      'Automate campaign expansion (+400 leads)',
+      'LinkedIn manual outreach (SaaS campaign)',
+      'HeyGen video expansion',
+      'New tech & content strategy audit',
+      'Tech fixes: trailing slash, sitemap, schema'
+    ]
   }
 ];
