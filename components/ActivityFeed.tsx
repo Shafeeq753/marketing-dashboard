@@ -7,9 +7,10 @@ interface ActivityFeedProps {
   data: MonthlyData[];
   isDark?: boolean;
   onActivityClick?: (activity: string) => void;
+  hideActionGroups?: boolean; // Hide clickable action-box groups (e.g. Tech & On-site Issues) — used in the quarter view
 }
 
-export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data, isDark = true, onActivityClick }) => {
+export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data, isDark = true, onActivityClick, hideActionGroups = false }) => {
   const reversedData = [...data].reverse();
 
   const renderActivity = (activity: string, key: React.Key) => (
@@ -43,7 +44,7 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data, isDark = true,
 
       <div className="relative border-l-2 border-dashed border-white/10 ml-5 space-y-14">
         {reversedData.length > 0 ? reversedData.map((month, idx) => {
-          const groups = month.activityGroups || [];
+          const groups = (month.activityGroups || []).filter(g => !(hideActionGroups && g.action));
           const flatActivities = month.activities || [];
           const hasGroups = groups.length > 0;
           const hasActivities = hasGroups || (flatActivities.length > 0 && flatActivities[0] !== '-');

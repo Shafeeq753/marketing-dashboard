@@ -18,6 +18,7 @@ import { SecurityModal } from './components/SecurityModal';
 import { TechFixesModal } from './components/TechFixesModal';
 import { AiCrawlModal } from './components/AiCrawlModal';
 import { BacklinksModal } from './components/BacklinksModal';
+import { MonthlySplitModal } from './components/MonthlySplitModal';
 import { AnnualOverview } from './components/AnnualOverview';
 import {
   Users,
@@ -131,6 +132,7 @@ const App: React.FC = () => {
   const [isTechModalOpen, setIsTechModalOpen] = useState(false);
   const [isAiCrawlModalOpen, setIsAiCrawlModalOpen] = useState(false);
   const [isBacklinksModalOpen, setIsBacklinksModalOpen] = useState(false);
+  const [isVideoSplitModalOpen, setIsVideoSplitModalOpen] = useState(false);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   useEffect(() => {
@@ -209,19 +211,21 @@ const App: React.FC = () => {
 
   const trafficDisplayValue = useMemo(() => {
     if (selectedPeriodType === 'quarter' && currentDataList.length > 0) {
-      return Math.round(currentAggregates.traffic / currentDataList.length);
+      // Quarter traffic reflects the latest month's level (June for Q1), not a sum/average.
+      return currentDataList[currentDataList.length - 1].traffic;
     }
     return currentAggregates.traffic;
-  }, [selectedPeriodType, currentAggregates.traffic, currentDataList.length]);
+  }, [selectedPeriodType, currentAggregates.traffic, currentDataList]);
 
   const trafficPrevValue = useMemo(() => {
     if (!prevAggregates) return null;
     if (selectedPeriodType === 'quarter') {
+      // Compare against the latest month of the previous quarter (matches the latest-month display).
       const chronologicalQuarters = Array.from(new Set(MONTHLY_DATA.map(d => d.quarter)));
       const idx = chronologicalQuarters.indexOf(selectedValue);
       const prevQuarter = chronologicalQuarters[idx - 1];
-      const prevMonthsCount = MONTHLY_DATA.filter(d => d.quarter === prevQuarter).length;
-      return Math.round(prevAggregates.traffic / (prevMonthsCount || 1));
+      const prevMonths = MONTHLY_DATA.filter(d => d.quarter === prevQuarter);
+      return prevMonths.length ? prevMonths[prevMonths.length - 1].traffic : null;
     }
     return prevAggregates.traffic;
   }, [selectedPeriodType, prevAggregates, selectedValue]);
@@ -477,7 +481,7 @@ const App: React.FC = () => {
                 {googleCrawlAgg && (
                   <StatCard title="Google Crawl Rate" value={formatCompact(googleCrawlAgg.totalRequests)} subValue={`${formatBytes(googleCrawlAgg.downloadBytes)}${googleCrawlAgg.avgResponseMs != null ? ` · ${googleCrawlAgg.avgResponseMs}ms avg` : ''}`} icon={<Gauge className="w-6 h-6" />} colorClass="text-blue-400" isDark={true} />
                 )}
-                <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
+                <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} isClickable={selectedPeriodType === 'quarter'} onClick={() => setIsVideoSplitModalOpen(true)} />
                 <StatCard title="Published / Revamped Pages" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Published</span><span className="text-2xl font-black text-white">{currentNewPublishedPages}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Revamped</span><span className="text-2xl font-black text-white">{currentRevampedPages}</span></div></div>} subValue={`Total: ${currentTotalPages}`} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
                 {hasCampaignData && (
                   <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{(currentAggregates.campaigns?.email ?? 0).toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{(currentAggregates.campaigns?.linkedin ?? 0).toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
@@ -517,7 +521,7 @@ const App: React.FC = () => {
                 </div>
                 <div className="lg:col-span-1">
                   <div className="sticky top-10">
-                    <ActivityFeed data={currentDataList} isDark={true} onActivityClick={handleActivityClick} />
+                    <ActivityFeed data={currentDataList} isDark={true} onActivityClick={handleActivityClick} hideActionGroups={selectedPeriodType === 'quarter'} />
                   </div>
                 </div>
               </div>
@@ -529,7 +533,8 @@ const App: React.FC = () => {
       <CrawlStatsModal isOpen={isCrawlModalOpen} onClose={() => setIsCrawlModalOpen(false)} isDark={true} />
       <WebsiteEditsModal isOpen={isWebsiteEditsModalOpen} onClose={() => setIsWebsiteEditsModalOpen(false)} isDark={true} />
       <ChatbotModal isOpen={isChatbotModalOpen} onClose={() => setIsChatbotModalOpen(false)} isDark={true} />
-      <TrafficBreakdownModal isOpen={isTrafficModalOpen} onClose={() => setIsTrafficModalOpen(false)} isDark={true} data={MONTHLY_DATA} selectedMonth={selectedPeriodType === 'month' ? selectedValue : ''} />
+      <TrafficBreakdownModal isOpen={isTrafficModalOpen} onClose={() => setIsTrafficModalOpen(false)} isDark={true} data={MONTHLY_DATA} selectedMonth={selectedPeriodType === 'month' ? selectedValue : selectedPeriodType === 'quarter' && currentDataList.length ? currentDataList[currentDataList.length - 1].month : ''} />
+      <MonthlySplitModal isOpen={isVideoSplitModalOpen} onClose={() => setIsVideoSplitModalOpen(false)} isDark={true} title="Benchmark Videos" period={selectedValue} data={currentDataList.map(d => ({ month: d.month, value: d.benchmarkVideos }))} accentHex="#fbbf24" />
       <SecurityModal isOpen={isSecurityModalOpen} onClose={() => setIsSecurityModalOpen(false)} isDark={true} />
       <TechFixesModal isOpen={isTechModalOpen} onClose={() => setIsTechModalOpen(false)} isDark={true} fixes={techFixesList} period={selectedValue} />
       <AiCrawlModal isOpen={isAiCrawlModalOpen} onClose={() => setIsAiCrawlModalOpen(false)} isDark={true} total={aiCrawlAgg?.total ?? 0} allowed={aiCrawlAgg?.allowed ?? 0} unsuccessful={aiCrawlAgg?.unsuccessful ?? 0} crawlers={aiCrawlAgg?.crawlers ?? []} period={selectedValue} />
@@ -611,6 +616,23 @@ const App: React.FC = () => {
                    </span>
                 </div>
               </section>
+
+              {currentDataList.length > 1 && (
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="h-5 w-1.5 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.8)]"></div>
+                    <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">BY MONTH</h4>
+                  </div>
+                  <div className="space-y-4">
+                    {currentDataList.map((m, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
+                        <span className="text-sm font-black text-white uppercase tracking-wider">{m.month}</span>
+                        <span className="text-lg font-black text-orange-500">{getTotalPages(m)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               {/* Footer Button */}
               <div className="flex justify-center pt-4">
