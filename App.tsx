@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { MONTHLY_DATA } from './constants';
+import { MONTHLY_DATA, QUARTERLY_BACKLINKS } from './constants';
 import { StatCard } from './components/StatCard';
 import { 
   TrafficChart, 
@@ -15,6 +15,9 @@ import { WebsiteEditsModal } from './components/WebsiteEditsModal';
 import { ChatbotModal } from './components/ChatbotModal';
 import { TrafficBreakdownModal } from './components/TrafficBreakdownModal';
 import { SecurityModal } from './components/SecurityModal';
+import { TechFixesModal } from './components/TechFixesModal';
+import { AiCrawlModal } from './components/AiCrawlModal';
+import { BacklinksModal } from './components/BacklinksModal';
 import { AnnualOverview } from './components/AnnualOverview';
 import {
   Users,
@@ -33,7 +36,11 @@ import {
   Zap,
   LayoutGrid,
   Trophy,
-  Folder
+  Folder,
+  Wrench,
+  Link2,
+  Bot,
+  Gauge
 } from 'lucide-react';
 import { MonthlyData } from './types';
 
@@ -56,12 +63,20 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     commercialKeywordPages: (acc.commercialKeywordPages || 0) + (curr.commercialKeywordPages || 0),
     exhibitorPages: (acc.exhibitorPages || 0) + (curr.exhibitorPages || 0),
     listicleBlogs: (acc.listicleBlogs || 0) + (curr.listicleBlogs || 0),
+    revampedBlogs: (acc.revampedBlogs || 0) + (curr.revampedBlogs || 0),
+    revampedVihPages: (acc.revampedVihPages || 0) + (curr.revampedVihPages || 0),
+    internsHired: (acc.internsHired || 0) + (curr.internsHired || 0),
+    backlinkDirectories: (acc.backlinkDirectories || 0) + (curr.backlinkDirectories || 0),
+    backlinkGuestOutreach: (acc.backlinkGuestOutreach || 0) + (curr.backlinkGuestOutreach || 0),
+    backlinkCollaborations: (acc.backlinkCollaborations || 0) + (curr.backlinkCollaborations || 0),
+    videosScraped: (acc.videosScraped || 0) + (curr.videosScraped || 0),
+    techFixes: [...(acc.techFixes || []), ...(curr.techFixes || [])],
     campaigns: {
-      email: acc.campaigns.email + curr.campaigns.email,
-      linkedin: acc.campaigns.linkedin + curr.campaigns.linkedin,
-      other: acc.campaigns.other + curr.campaigns.other
+      email: (acc.campaigns?.email || 0) + (curr.campaigns?.email || 0),
+      linkedin: (acc.campaigns?.linkedin || 0) + (curr.campaigns?.linkedin || 0),
+      other: (acc.campaigns?.other || 0) + (curr.campaigns?.other || 0)
     },
-    activities: [...acc.activities, ...curr.activities],
+    activities: [...(acc.activities || []), ...(curr.activities || [])],
     totalVideosOnSite: curr.totalVideosOnSite 
   }), { 
     month: '',
@@ -81,6 +96,14 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     commercialKeywordPages: 0,
     exhibitorPages: 0,
     listicleBlogs: 0,
+    revampedBlogs: 0,
+    revampedVihPages: 0,
+    internsHired: 0,
+    backlinkDirectories: 0,
+    backlinkGuestOutreach: 0,
+    backlinkCollaborations: 0,
+    videosScraped: 0,
+    techFixes: [],
     campaigns: { email: 0, linkedin: 0, other: 0 },
     activities: [],
     totalVideosOnSite: 0
@@ -105,6 +128,9 @@ const App: React.FC = () => {
   const [isChatbotModalOpen, setIsChatbotModalOpen] = useState(false);
   const [isTrafficModalOpen, setIsTrafficModalOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
+  const [isTechModalOpen, setIsTechModalOpen] = useState(false);
+  const [isAiCrawlModalOpen, setIsAiCrawlModalOpen] = useState(false);
+  const [isBacklinksModalOpen, setIsBacklinksModalOpen] = useState(false);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   useEffect(() => {
@@ -208,14 +234,63 @@ const App: React.FC = () => {
     return { trend: trend as 'up' | 'down' | 'neutral', value: `${Math.abs(Number(percent))}%` };
   };
 
+  const formatCompact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : `${n}`);
+  const formatBytes = (b?: number) => (b == null ? '' : b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.round(b / 1e6)} MB`);
+
   const getTotalPages = (d: MonthlyData) =>
     d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) +
     (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) +
     (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0) +
-    (d.listicleBlogs || 0);
+    (d.listicleBlogs || 0) + (d.revampedBlogs || 0) + (d.revampedVihPages || 0);
 
   const currentTotalPages = getTotalPages(currentAggregates);
   const prevTotalPages = prevAggregates ? getTotalPages(prevAggregates) : null;
+  // Campaigns are only shown for periods that still carry campaign data (archive months).
+  // Current-FY months handled by another team omit `campaigns`, so the card/chart hide.
+  const hasCampaignData = currentDataList.some(d => d.campaigns !== undefined);
+
+  // Split the pages metric into newly-published vs revamped for the dual-value card.
+  const getRevampedPages = (d: MonthlyData) => (d.revampedBlogs || 0) + (d.revampedVihPages || 0);
+  const currentRevampedPages = getRevampedPages(currentAggregates);
+  const currentNewPublishedPages = currentTotalPages - currentRevampedPages;
+  const techFixesList = currentAggregates.techFixes || [];
+  // Backlinks: quarter view uses the richer manual quarter data (breakdown + trend image);
+  // month view just shows that month's directory count (simple, no modal).
+  const backlinkView = useMemo(() => {
+    if (selectedPeriodType === 'quarter' && QUARTERLY_BACKLINKS[selectedValue]) {
+      const q = QUARTERLY_BACKLINKS[selectedValue];
+      return { rich: true, directories: q.directories, guestOutreach: q.guestOutreach, collaborations: q.collaborations };
+    }
+    return { rich: false, directories: currentAggregates.backlinkDirectories || 0, guestOutreach: 0, collaborations: 0 };
+  }, [selectedPeriodType, selectedValue, currentAggregates]);
+
+  // AI crawler stats aggregated across the selected period (sum counts, merge crawlers, recompute rate).
+  const aiCrawlAgg = useMemo(() => {
+    const months = currentDataList.filter(d => d.aiCrawl);
+    if (months.length === 0) return null;
+    const total = months.reduce((s, d) => s + (d.aiCrawl!.total || 0), 0);
+    const allowed = months.reduce((s, d) => s + (d.aiCrawl!.allowed || 0), 0);
+    const unsuccessful = months.reduce((s, d) => s + (d.aiCrawl!.unsuccessful || 0), 0);
+    const map = new Map<string, { name: string; bot?: string; requests: number }>();
+    months.forEach(d => d.aiCrawl!.crawlers?.forEach(c => {
+      const e = map.get(c.name);
+      if (e) e.requests += c.requests; else map.set(c.name, { ...c });
+    }));
+    const crawlers = Array.from(map.values()).sort((a, b) => b.requests - a.requests);
+    const rate = total > 0 ? Math.round((allowed / total) * 100) : 0;
+    return { total, allowed, unsuccessful, crawlers, rate };
+  }, [currentDataList]);
+
+  // Google Search Console crawl stats: sum requests + bytes, average the response time.
+  const googleCrawlAgg = useMemo(() => {
+    const months = currentDataList.filter(d => d.googleCrawl);
+    if (months.length === 0) return null;
+    const totalRequests = months.reduce((s, d) => s + (d.googleCrawl!.totalRequests || 0), 0);
+    const downloadBytes = months.reduce((s, d) => s + (d.googleCrawl!.downloadBytes || 0), 0);
+    const respMonths = months.filter(d => d.googleCrawl!.avgResponseMs != null);
+    const avgResponseMs = respMonths.length ? Math.round(respMonths.reduce((s, d) => s + (d.googleCrawl!.avgResponseMs || 0), 0) / respMonths.length) : undefined;
+    return { totalRequests, downloadBytes, avgResponseMs };
+  }, [currentDataList]);
 
   const trafficTrend = calculateTrend(trafficDisplayValue, trafficPrevValue);
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
@@ -228,7 +303,9 @@ const App: React.FC = () => {
 
   const handleActivityClick = (activity: string) => {
     const act = activity.toLowerCase();
-    if (act.includes('indexing issues') || act.includes('website issues')) {
+    if (act === 'tech-fixes') {
+      setIsTechModalOpen(true);
+    } else if (act.includes('indexing issues') || act.includes('website issues')) {
       setIsCrawlModalOpen(true);
     } else if (act.includes('website edits')) {
       setIsWebsiteEditsModalOpen(true);
@@ -394,9 +471,27 @@ const App: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                 <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} isClickable={true} onClick={() => setIsTrafficModalOpen(true)} />
+                {aiCrawlAgg && (
+                  <StatCard title="AI Crawl Requests" value={aiCrawlAgg.total.toLocaleString()} subValue={`${aiCrawlAgg.allowed.toLocaleString()} allowed · ${aiCrawlAgg.rate}%`} icon={<Bot className="w-6 h-6" />} colorClass="text-cyan-400" isDark={true} isClickable={true} onClick={() => setIsAiCrawlModalOpen(true)} />
+                )}
+                {googleCrawlAgg && (
+                  <StatCard title="Google Crawl Rate" value={formatCompact(googleCrawlAgg.totalRequests)} subValue={`${formatBytes(googleCrawlAgg.downloadBytes)}${googleCrawlAgg.avgResponseMs != null ? ` · ${googleCrawlAgg.avgResponseMs}ms avg` : ''}`} icon={<Gauge className="w-6 h-6" />} colorClass="text-blue-400" isDark={true} />
+                )}
                 <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} />
-                <StatCard title="New Published pages" value={currentTotalPages} subValue={prevTotalPages !== null ? `vs prev: ${prevTotalPages}` : "New pages"} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
-                <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.email.toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{currentAggregates.campaigns.linkedin.toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
+                <StatCard title="Published / Revamped Pages" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Published</span><span className="text-2xl font-black text-white">{currentNewPublishedPages}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Revamped</span><span className="text-2xl font-black text-white">{currentRevampedPages}</span></div></div>} subValue={`Total: ${currentTotalPages}`} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
+                {hasCampaignData && (
+                  <StatCard title="Campaign Reach" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Email</span><span className="text-2xl font-black text-white">{(currentAggregates.campaigns?.email ?? 0).toLocaleString()}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">LinkedIn</span><span className="text-2xl font-black text-white">{(currentAggregates.campaigns?.linkedin ?? 0).toLocaleString()}</span></div></div>} icon={<BarChart3 className="w-6 h-6" />} colorClass="text-orange-500" isDark={true} />
+                )}
+                {techFixesList.length > 0 && (
+                  <StatCard title="Tech / On-site Fixes" value={techFixesList.length} subValue="View all fixes" icon={<Wrench className="w-6 h-6" />} colorClass="text-sky-400" isDark={true} isClickable={true} onClick={() => setIsTechModalOpen(true)} />
+                )}
+                {backlinkView.directories > 0 && (
+                  backlinkView.rich ? (
+                    <StatCard title="Backlinks" value={backlinkView.directories} subValue={`+${backlinkView.guestOutreach} outreach · ${backlinkView.collaborations} collab`} icon={<Link2 className="w-6 h-6" />} colorClass="text-violet-400" isDark={true} isClickable={true} onClick={() => setIsBacklinksModalOpen(true)} />
+                  ) : (
+                    <StatCard title="Backlinks" value={backlinkView.directories} subValue="Directories added" icon={<Link2 className="w-6 h-6" />} colorClass="text-violet-400" isDark={true} />
+                  )
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 pt-4 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
@@ -411,10 +506,14 @@ const App: React.FC = () => {
                     <div className="glass-card rounded-[3rem] p-10 shadow-xl"><VideosChart data={chartDataList} isDark={true} /></div>
                     <div className="glass-card rounded-[3rem] p-10 shadow-xl"><NewslettersChart data={chartDataList} isDark={true} /></div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  {hasCampaignData ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                      <div className="glass-card rounded-[3rem] p-10 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
+                      <div className="glass-card rounded-[3rem] p-10 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
+                    </div>
+                  ) : (
                     <div className="glass-card rounded-[3rem] p-10 shadow-xl"><BlogsChart data={chartDataList} isDark={true} /></div>
-                    <div className="glass-card rounded-[3rem] p-10 shadow-xl"><CampaignPerformanceChart data={chartDataList} isDark={true} /></div>
-                  </div>
+                  )}
                 </div>
                 <div className="lg:col-span-1">
                   <div className="sticky top-10">
@@ -432,6 +531,9 @@ const App: React.FC = () => {
       <ChatbotModal isOpen={isChatbotModalOpen} onClose={() => setIsChatbotModalOpen(false)} isDark={true} />
       <TrafficBreakdownModal isOpen={isTrafficModalOpen} onClose={() => setIsTrafficModalOpen(false)} isDark={true} data={MONTHLY_DATA} selectedMonth={selectedPeriodType === 'month' ? selectedValue : ''} />
       <SecurityModal isOpen={isSecurityModalOpen} onClose={() => setIsSecurityModalOpen(false)} isDark={true} />
+      <TechFixesModal isOpen={isTechModalOpen} onClose={() => setIsTechModalOpen(false)} isDark={true} fixes={techFixesList} period={selectedValue} />
+      <AiCrawlModal isOpen={isAiCrawlModalOpen} onClose={() => setIsAiCrawlModalOpen(false)} isDark={true} total={aiCrawlAgg?.total ?? 0} allowed={aiCrawlAgg?.allowed ?? 0} unsuccessful={aiCrawlAgg?.unsuccessful ?? 0} crawlers={aiCrawlAgg?.crawlers ?? []} period={selectedValue} />
+      <BacklinksModal isOpen={isBacklinksModalOpen} onClose={() => setIsBacklinksModalOpen(false)} isDark={true} directories={backlinkView.directories} guestOutreach={backlinkView.guestOutreach} collaborations={backlinkView.collaborations} period={selectedValue} />
 
       {/* Content Deep Dive Modal */}
       {isModalOpen && (
@@ -458,7 +560,7 @@ const App: React.FC = () => {
               <section className="space-y-8">
                 <div className="flex items-center gap-4">
                   <div className="h-5 w-1.5 bg-orange-500 rounded-full shadow-[0_0_15px_rgba(249,115,22,0.8)]"></div>
-                  <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">PUBLISHED CONTENT BREAKDOWN</h4>
+                  <h4 className="text-base font-black text-white uppercase tracking-[0.2em]">PUBLISHED / REVAMPED BREAKDOWN</h4>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-4">
@@ -475,6 +577,8 @@ const App: React.FC = () => {
                     { label: 'COMMERCIAL KEYWORDS', value: (currentAggregates as any).commercialKeywordPages || 0, icon: <Zap className="w-4 h-4" /> },
                     { label: 'EXHIBITOR PAGES', value: (currentAggregates as any).exhibitorPages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
                     { label: 'LISTICLE BLOGS', value: (currentAggregates as any).listicleBlogs || 0, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'REVAMPED BLOGS', value: (currentAggregates as any).revampedBlogs || 0, icon: <FileText className="w-4 h-4" /> },
+                    { label: 'REVAMPED VIH PAGES', value: (currentAggregates as any).revampedVihPages || 0, icon: <MonitorPlay className="w-4 h-4" /> },
                   ].filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
@@ -488,7 +592,7 @@ const App: React.FC = () => {
 
                 {/* Total Distribution Bar */}
                 <div className="bg-orange-600/10 border border-orange-500/20 rounded-2xl p-4 flex justify-between items-center px-8 shadow-inner">
-                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PUBLISHED PAGES</span>
+                   <span className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em]">TOTAL PUBLISHED / REVAMPED PAGES</span>
                    <span className="text-2xl font-black text-orange-500 tracking-tighter">
                     {((currentAggregates as any).caseStudies || 0) +
                      ((currentAggregates as any).servicePages || 0) +
@@ -501,7 +605,9 @@ const App: React.FC = () => {
                      ((currentAggregates as any).decliningPages || 0) +
                      ((currentAggregates as any).commercialKeywordPages || 0) +
                      ((currentAggregates as any).exhibitorPages || 0) +
-                     ((currentAggregates as any).listicleBlogs || 0)}
+                     ((currentAggregates as any).listicleBlogs || 0) +
+                     ((currentAggregates as any).revampedBlogs || 0) +
+                     ((currentAggregates as any).revampedVihPages || 0)}
                    </span>
                 </div>
               </section>

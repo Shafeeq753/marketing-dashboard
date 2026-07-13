@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Users, Globe, Share2, MessageCircle, HelpCircle, Video, Search, TrendingUp, Eye, UserCheck } from 'lucide-react';
+import { X, Users, Globe, Share2, MessageCircle, HelpCircle, Video, Search, TrendingUp, Eye, UserCheck, Sparkles } from 'lucide-react';
 import { MonthlyData, TrafficChannel } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -20,6 +20,7 @@ const channelColors: Record<string, string> = {
   'Unassigned': '#64748b',
   'Organic Video': '#ef4444',
   'Paid Search': '#06b6d4',
+  'AI Assistant': '#ec4899',
 };
 
 const channelIcons: Record<string, React.ReactNode> = {
@@ -30,6 +31,7 @@ const channelIcons: Record<string, React.ReactNode> = {
   'Unassigned': <HelpCircle className="w-4 h-4" />,
   'Organic Video': <Video className="w-4 h-4" />,
   'Paid Search': <Search className="w-4 h-4" />,
+  'AI Assistant': <Sparkles className="w-4 h-4" />,
 };
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -86,7 +88,7 @@ export const TrafficBreakdownModal: React.FC<TrafficBreakdownModalProps> = ({ is
   };
 
   // Prepare chart data for comparison across months
-  const comparisonChannels = ['Organic Search', 'Direct', 'Referral', 'Organic Social', 'Organic Video'];
+  const comparisonChannels = ['Organic Search', 'Direct', 'AI Assistant', 'Referral', 'Organic Social', 'Organic Video'];
   const comparisonData = comparisonChannels.map(channel => {
     const row: any = { channel: channel.replace('Organic ', 'Org. ') };
     monthsWithBreakdown.forEach(m => {

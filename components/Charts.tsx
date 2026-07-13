@@ -115,7 +115,7 @@ export const NewslettersChart: React.FC<ChartProps> = ({ data, isDark = true }) 
 export const BlogsChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
   const chartData = data.map(d => ({
     ...d,
-    totalPublishedPages: d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) + (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) + (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0) + (d.listicleBlogs || 0)
+    totalPublishedPages: d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) + (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) + (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0) + (d.listicleBlogs || 0) + (d.revampedBlogs || 0) + (d.revampedVihPages || 0)
   }));
 
   const axisColor = isDark ? 'rgba(255,255,255,0.3)' : '#64748b';
@@ -140,9 +140,9 @@ export const BlogsChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
 export const CampaignPerformanceChart: React.FC<ChartProps> = ({ data, isDark = true }) => {
   const formattedData = data.map(d => ({
     month: d.month,
-    Email: d.campaigns.email,
-    LinkedIn: d.campaigns.linkedin,
-    Other: d.campaigns.other
+    Email: d.campaigns?.email ?? 0,
+    LinkedIn: d.campaigns?.linkedin ?? 0,
+    Other: d.campaigns?.other ?? 0
   }));
 
   const axisColor = isDark ? 'rgba(255,255,255,0.3)' : '#64748b';

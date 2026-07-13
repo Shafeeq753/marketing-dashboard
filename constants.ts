@@ -1,6 +1,12 @@
 
 import { MonthlyData } from './types';
 
+// Quarter-level backlink data (richer than the monthly directory counts).
+// Shown only on the quarter view, with a breakdown + trend image in the modal.
+export const QUARTERLY_BACKLINKS: Record<string, { directories: number; guestOutreach: number; collaborations: number; trendImage?: string }> = {
+  Q1: { directories: 60, guestOutreach: 80, collaborations: 3, trendImage: '/backlinks-trend.png' },
+};
+
 export const MONTHLY_DATA: MonthlyData[] = [
   {
     month: 'July',
@@ -199,6 +205,100 @@ export const MONTHLY_DATA: MonthlyData[] = [
       'HeyGen video expansion',
       'New tech & content strategy audit',
       'Tech fixes: trailing slash, sitemap, schema'
+    ]
+  },
+  {
+    // All June figures are real. Activities are completed tasks from the task board.
+    month: 'June',
+    quarter: 'Q1',
+    traffic: 4426, // GA4 Total Sessions (channel rows sum to 4381)
+    benchmarkVideos: 0, // No benchmark videos added in June
+    totalVideosOnSite: 1340, // Unchanged from May (no videos added)
+    newsletters: 5,
+    blogs: 0, // No new pages published in June
+    revampedBlogs: 5,
+    revampedVihPages: 41,
+    internsHired: 3, // Hiring & training — 3 marketing interns onboarded
+    backlinkDirectories: 25,
+    videosScraped: 2000, // VIH video scraping
+    techFixes: [
+      'Checklist issues fixed',
+      'Feed url fixed',
+      'APO initialization',
+      'UCSS',
+      'Internal CSS',
+      'Parsing errors',
+      'Duplicate urls remove',
+      'Virtual tour css issue fix',
+      'Light gray issue fix',
+      'Lazy load issues fix',
+      'Conversion tracking'
+    ],
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 2896 },
+      { channel: 'AI Assistant', sessions: 582 },
+      { channel: 'Organic Search', sessions: 577 },
+      { channel: 'Referral', sessions: 155 },
+      { channel: 'Unassigned', sessions: 149 },
+      { channel: 'Organic Social', sessions: 18 },
+      { channel: 'Organic Video', sessions: 4 },
+    ],
+    aiCrawl: {
+      total: 4000,
+      allowed: 3000,
+      unsuccessful: 135,
+      crawlers: [
+        { name: 'ByteDance', bot: 'Bytespider', requests: 1060 },
+        { name: 'Microsoft', bot: 'BingBot', requests: 435 },
+        { name: 'Apple', bot: 'Applebot', requests: 404 },
+        { name: 'Huawei', bot: 'PetalBot', requests: 402 },
+        { name: 'Google', bot: 'Googlebot', requests: 353 },
+        { name: 'OpenAI', bot: 'ChatGPT-User', requests: 196 },
+        { name: 'Amazon', bot: 'Amazonbot', requests: 180 },
+        { name: 'Anthropic', bot: 'ClaudeBot', requests: 158 },
+        { name: 'Meta', bot: 'Meta-ExternalAgent', requests: 108 },
+        { name: 'Baidu', bot: 'Baidu', requests: 89 },
+      ],
+    },
+    googleCrawl: {
+      totalRequests: 30200,
+      downloadBytes: 990000000, // 990 MB
+      avgResponseMs: 528,
+    },
+    // Campaigns intentionally omitted — handled by another team from June onward.
+    activityGroups: [
+      {
+        // Renders as one box in the feed; clicking opens the Tech Fixes modal with the full error list.
+        title: 'Tech & On-site Issues',
+        action: 'tech-fixes'
+      },
+      {
+        title: 'Content & VIH',
+        items: [
+          'VIH Non-indexed content revamp',
+          'Video Scraping — ~2,000 VIH videos',
+          'HeyGen videos'
+        ]
+      },
+      {
+        title: 'Ads',
+        items: [
+          'Google Ads (completed)'
+        ]
+      },
+      {
+        title: 'Hiring & Training',
+        items: [
+          'Hiring Process — 3 interns onboarded',
+          'Interns sessions'
+        ]
+      },
+      {
+        title: 'Tools',
+        items: [
+          'Highs & Honors tool update'
+        ]
+      }
     ]
   }
 ];
