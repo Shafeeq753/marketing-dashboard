@@ -34,6 +34,8 @@ export interface ActivityGroup {
   title: string;
   items?: string[];
   action?: string; // If set, the group renders as ONE clickable box that fires this action (e.g. open a modal) instead of listing items
+  actionLabel?: string; // Sub-label inside the clickable box (defaults to 'View details')
+  actionIcon?: 'wrench' | 'check'; // Icon inside the clickable box (defaults to 'check')
 }
 
 export interface MonthlyData {

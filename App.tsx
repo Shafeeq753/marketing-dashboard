@@ -16,6 +16,7 @@ import { ChatbotModal } from './components/ChatbotModal';
 import { TrafficBreakdownModal } from './components/TrafficBreakdownModal';
 import { SecurityModal } from './components/SecurityModal';
 import { TechFixesModal } from './components/TechFixesModal';
+import { ChecklistModal } from './components/ChecklistModal';
 import { AiCrawlModal } from './components/AiCrawlModal';
 import { BacklinksModal } from './components/BacklinksModal';
 import { MonthlySplitModal } from './components/MonthlySplitModal';
@@ -122,6 +123,9 @@ type PeriodType = 'quarter' | 'month' | 'annual';
 const App: React.FC = () => {
   const [selectedPeriodType, setSelectedPeriodType] = useState<PeriodType>('month');
   const [selectedValue, setSelectedValue] = useState<string>('April');
+  // Month names and quarter labels repeat across fiscal years (e.g. July/Q2 exist in both
+  // the 2025-26 archive and the current FY), so the sidebar records which side it came from.
+  const [selectedScope, setSelectedScope] = useState<'current' | 'archive'>('current');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCrawlModalOpen, setIsCrawlModalOpen] = useState(false);
@@ -133,6 +137,7 @@ const App: React.FC = () => {
   const [isAiCrawlModalOpen, setIsAiCrawlModalOpen] = useState(false);
   const [isBacklinksModalOpen, setIsBacklinksModalOpen] = useState(false);
   const [isVideoSplitModalOpen, setIsVideoSplitModalOpen] = useState(false);
+  const [checklistGroup, setChecklistGroup] = useState<{ title: string; items: string[] } | null>(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
   useEffect(() => {
@@ -165,13 +170,30 @@ const App: React.FC = () => {
     [currentFyStartIdx]
   );
 
+  // Index range of the fiscal year the current selection belongs to.
+  const scopeBounds = useMemo(
+    () => (selectedScope === 'current'
+      ? { start: currentFyStartIdx, end: MONTHLY_DATA.length }
+      : { start: 0, end: currentFyStartIdx }),
+    [selectedScope, currentFyStartIdx]
+  );
+
+  // Global index of the selected month, resolved inside its own fiscal year so a repeated
+  // month name (July) never matches the other FY's entry.
+  const selectedMonthIdx = useMemo(() => {
+    if (selectedPeriodType !== 'month') return -1;
+    for (let i = scopeBounds.start; i < scopeBounds.end; i++) {
+      if (MONTHLY_DATA[i].month === selectedValue) return i;
+    }
+    return -1;
+  }, [selectedPeriodType, selectedValue, scopeBounds]);
+
   const currentDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
-      return MONTHLY_DATA.filter(d => d.quarter === selectedValue);
-    } else {
-      return MONTHLY_DATA.filter(d => d.month === selectedValue);
+      return MONTHLY_DATA.slice(scopeBounds.start, scopeBounds.end).filter(d => d.quarter === selectedValue);
     }
-  }, [selectedPeriodType, selectedValue]);
+    return selectedMonthIdx >= 0 ? [MONTHLY_DATA[selectedMonthIdx]] : [];
+  }, [selectedPeriodType, selectedValue, scopeBounds, selectedMonthIdx]);
 
   const currentAggregates = useMemo(() => {
     if (currentDataList.length === 1) return currentDataList[0];
@@ -181,33 +203,32 @@ const App: React.FC = () => {
   const chartDataList = useMemo(() => {
     if (selectedPeriodType === 'quarter') {
       return currentDataList;
-    } else {
-      const currentIndex = MONTHLY_DATA.findIndex(d => d.month === selectedValue);
-      if (currentIndex > 0) {
-        return [MONTHLY_DATA[currentIndex - 1], MONTHLY_DATA[currentIndex]];
-      }
-      return [MONTHLY_DATA[currentIndex]];
     }
-  }, [currentDataList, selectedPeriodType, selectedValue]);
+    if (selectedMonthIdx < 0) return [];
+    // The comparison month is the chronological predecessor, which may sit in the previous
+    // fiscal year (April compares against March).
+    return selectedMonthIdx > 0
+      ? [MONTHLY_DATA[selectedMonthIdx - 1], MONTHLY_DATA[selectedMonthIdx]]
+      : [MONTHLY_DATA[selectedMonthIdx]];
+  }, [currentDataList, selectedPeriodType, selectedMonthIdx]);
+
+  // Previous quarter within the same fiscal year — quarter labels repeat across years, so
+  // walking the global list would make the current FY's Q2 compare against the 2025 archive.
+  const prevQuarterData = useMemo(() => {
+    if (selectedPeriodType !== 'quarter') return null;
+    const scoped = MONTHLY_DATA.slice(scopeBounds.start, scopeBounds.end);
+    const chronologicalQuarters = Array.from(new Set(scoped.map(d => d.quarter)));
+    const idx = chronologicalQuarters.indexOf(selectedValue);
+    if (idx <= 0) return null;
+    return scoped.filter(d => d.quarter === chronologicalQuarters[idx - 1]);
+  }, [selectedPeriodType, selectedValue, scopeBounds]);
 
   const prevAggregates = useMemo(() => {
-    const chronologicalQuarters = Array.from(new Set(MONTHLY_DATA.map(d => d.quarter)));
-    
     if (selectedPeriodType === 'quarter') {
-      const idx = chronologicalQuarters.indexOf(selectedValue);
-      if (idx > 0) {
-        const prevQuarter = chronologicalQuarters[idx - 1];
-        const prevData = MONTHLY_DATA.filter(d => d.quarter === prevQuarter);
-        return aggregateData(prevData);
-      }
-    } else {
-      const idx = MONTHLY_DATA.findIndex(d => d.month === selectedValue);
-      if (idx > 0) {
-        return MONTHLY_DATA[idx - 1];
-      }
+      return prevQuarterData ? aggregateData(prevQuarterData) : null;
     }
-    return null;
-  }, [selectedPeriodType, selectedValue]);
+    return selectedMonthIdx > 0 ? MONTHLY_DATA[selectedMonthIdx - 1] : null;
+  }, [selectedPeriodType, prevQuarterData, selectedMonthIdx]);
 
   const trafficDisplayValue = useMemo(() => {
     if (selectedPeriodType === 'quarter' && currentDataList.length > 0) {
@@ -221,14 +242,10 @@ const App: React.FC = () => {
     if (!prevAggregates) return null;
     if (selectedPeriodType === 'quarter') {
       // Compare against the latest month of the previous quarter (matches the latest-month display).
-      const chronologicalQuarters = Array.from(new Set(MONTHLY_DATA.map(d => d.quarter)));
-      const idx = chronologicalQuarters.indexOf(selectedValue);
-      const prevQuarter = chronologicalQuarters[idx - 1];
-      const prevMonths = MONTHLY_DATA.filter(d => d.quarter === prevQuarter);
-      return prevMonths.length ? prevMonths[prevMonths.length - 1].traffic : null;
+      return prevQuarterData?.length ? prevQuarterData[prevQuarterData.length - 1].traffic : null;
     }
     return prevAggregates.traffic;
-  }, [selectedPeriodType, prevAggregates, selectedValue]);
+  }, [selectedPeriodType, prevAggregates, prevQuarterData]);
 
   const calculateTrend = (current: number, previous: number | undefined | null) => {
     if (previous === undefined || previous === null || previous === 0) return { trend: 'neutral' as const, value: '-' };
@@ -300,12 +317,23 @@ const App: React.FC = () => {
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
   const blogTrend = calculateTrend(currentTotalPages, prevTotalPages);
 
-  const handleSidebarClick = (type: PeriodType, value: string) => {
+  const handleSidebarClick = (type: PeriodType, value: string, scope: 'current' | 'archive' = 'current') => {
     setSelectedPeriodType(type);
     setSelectedValue(value);
+    setSelectedScope(scope);
   };
 
   const handleActivityClick = (activity: string) => {
+    // An action group that carries its own item list opens the generic checklist modal —
+    // resolved from the data, so new groups need no extra wiring here.
+    const group = currentDataList
+      .flatMap(d => d.activityGroups || [])
+      .find(g => g.action === activity && g.items?.length);
+    if (group) {
+      setChecklistGroup({ title: group.title, items: group.items! });
+      return;
+    }
+
     const act = activity.toLowerCase();
     if (act === 'tech-fixes') {
       setIsTechModalOpen(true);
@@ -345,7 +373,7 @@ const App: React.FC = () => {
               <ul className="space-y-3 mb-3">
                 {currentQuarters.map(q => (
                   <li key={q}>
-                    <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                    <button onClick={() => handleSidebarClick('quarter', q, 'current')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-4 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedScope === 'current' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
                       <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
                     </button>
                   </li>
@@ -354,9 +382,9 @@ const App: React.FC = () => {
             )}
             <div className={`space-y-1 ${!isSidebarCollapsed ? `pl-4` : ''}`}>
               {currentMonths.map(m => (
-                <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
+                <button key={m} onClick={() => handleSidebarClick('month', m, 'current')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-4 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedScope === 'current' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
                   {isSidebarCollapsed ? m.substring(0, 3) : m}
-                  {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
+                  {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedScope === 'current' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
                 </button>
               ))}
             </div>
@@ -383,7 +411,7 @@ const App: React.FC = () => {
                   {/* Annual Report */}
                   <ul className="space-y-3">
                     <li>
-                      <button onClick={() => handleSidebarClick('annual', '2025-2026')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'annual' ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-500 border border-orange-500/20 shadow-lg shadow-orange-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                      <button onClick={() => handleSidebarClick('annual', '2025-2026', 'archive')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'annual' ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 text-orange-500 border border-orange-500/20 shadow-lg shadow-orange-500/10' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
                         <span className="flex items-center gap-4"><Trophy className="w-5 h-5 opacity-80" />{!isSidebarCollapsed && 'Annual Report'}</span>
                         {!isSidebarCollapsed && selectedPeriodType === 'annual' && <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)] animate-pulse"></div>}
                       </button>
@@ -395,7 +423,7 @@ const App: React.FC = () => {
                     <ul className="space-y-3">
                       {archivedQuarters.map(q => (
                         <li key={q}>
-                          <button onClick={() => handleSidebarClick('quarter', q)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
+                          <button onClick={() => handleSidebarClick('quarter', q, 'archive')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'justify-between px-5'} py-3 rounded-2xl text-sm font-black transition-all ${selectedPeriodType === 'quarter' && selectedScope === 'archive' && selectedValue === q ? 'bg-white/10 text-orange-500 border border-white/5' : 'text-slate-500 hover:text-white hover:bg-white/5'}`}>
                             <span className="flex items-center gap-4"><CalendarDays className="w-5 h-5 opacity-60" />{!isSidebarCollapsed && q}</span>
                           </button>
                         </li>
@@ -407,9 +435,9 @@ const App: React.FC = () => {
                   {archivedMonths.length > 0 && (
                     <div className={`space-y-1 ${!isSidebarCollapsed ? `pl-4` : ''}`}>
                       {archivedMonths.map(m => (
-                        <button key={m} onClick={() => handleSidebarClick('month', m)} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
+                        <button key={m} onClick={() => handleSidebarClick('month', m, 'archive')} className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center' : 'justify-between'} px-4 py-3 rounded-2xl text-[13px] font-bold transition-all text-left ${selectedPeriodType === 'month' && selectedScope === 'archive' && selectedValue === m ? 'text-orange-500 bg-orange-500/10' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}>
                           {isSidebarCollapsed ? m.substring(0, 3) : m}
-                          {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
+                          {!isSidebarCollapsed && selectedPeriodType === 'month' && selectedScope === 'archive' && selectedValue === m && <div className="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,1)]"></div>}
                         </button>
                       ))}
                     </div>
@@ -537,6 +565,7 @@ const App: React.FC = () => {
       <MonthlySplitModal isOpen={isVideoSplitModalOpen} onClose={() => setIsVideoSplitModalOpen(false)} isDark={true} title="Benchmark Videos" period={selectedValue} data={currentDataList.map(d => ({ month: d.month, value: d.benchmarkVideos }))} accentHex="#fbbf24" />
       <SecurityModal isOpen={isSecurityModalOpen} onClose={() => setIsSecurityModalOpen(false)} isDark={true} />
       <TechFixesModal isOpen={isTechModalOpen} onClose={() => setIsTechModalOpen(false)} isDark={true} fixes={techFixesList} period={selectedValue} />
+      <ChecklistModal isOpen={checklistGroup !== null} onClose={() => setChecklistGroup(null)} isDark={true} title={checklistGroup?.title ?? ''} items={checklistGroup?.items ?? []} period={selectedValue} />
       <AiCrawlModal isOpen={isAiCrawlModalOpen} onClose={() => setIsAiCrawlModalOpen(false)} isDark={true} total={aiCrawlAgg?.total ?? 0} allowed={aiCrawlAgg?.allowed ?? 0} unsuccessful={aiCrawlAgg?.unsuccessful ?? 0} crawlers={aiCrawlAgg?.crawlers ?? []} period={selectedValue} />
       <BacklinksModal isOpen={isBacklinksModalOpen} onClose={() => setIsBacklinksModalOpen(false)} isDark={true} directories={backlinkView.directories} guestOutreach={backlinkView.guestOutreach} collaborations={backlinkView.collaborations} period={selectedValue} />
 

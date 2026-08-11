@@ -270,7 +270,9 @@ export const MONTHLY_DATA: MonthlyData[] = [
       {
         // Renders as one box in the feed; clicking opens the Tech Fixes modal with the full error list.
         title: 'Tech & On-site Issues',
-        action: 'tech-fixes'
+        action: 'tech-fixes',
+        actionLabel: 'View all fixes',
+        actionIcon: 'wrench'
       },
       {
         title: 'Content & VIH',
@@ -297,6 +299,79 @@ export const MONTHLY_DATA: MonthlyData[] = [
         title: 'Tools',
         items: [
           'Highs & Honors tool update'
+        ]
+      }
+    ]
+  },
+  {
+    // July 2026 — FY2026-27 Q2. NOTE: a second 'July' (FY2025-26 Q2) exists at the top of this
+    // array; App.tsx scopes every month/quarter lookup by fiscal year so the two never merge.
+    month: 'July',
+    quarter: 'Q2',
+    // GA4 "Active users" 6.2K. Caveat: the source snapshot covers the rolling 28 days
+    // Jul 14 – Aug 10 2026, and earlier months record Sessions rather than Active Users.
+    traffic: 6200,
+    benchmarkVideos: 0,
+    totalVideosOnSite: 1340, // Unchanged from June (no benchmark videos added)
+    newsletters: 5,
+    blogs: 0, // No new pages launched in July
+    backlinkDirectories: 0, // No backlinks acquired
+    techFixes: [], // No on-site fixes
+    // Sessions by default channel group, same 28-day window as `traffic` above.
+    // Direct and Organic Search are rounded in the GA4 snapshot; rows sum to ~6,921.
+    trafficBreakdown: [
+      { channel: 'Direct', sessions: 5000 },
+      { channel: 'Organic Search', sessions: 1200 },
+      { channel: 'AI Assistant', sessions: 463 },
+      { channel: 'Unassigned', sessions: 124 },
+      { channel: 'Referral', sessions: 78 },
+      { channel: 'Paid Search', sessions: 31 },
+      { channel: 'Organic Social', sessions: 25 },
+    ],
+    // aiCrawl intentionally omitted — Cloudflare AI crawler data unavailable for July.
+    googleCrawl: {
+      totalRequests: 32800,
+    },
+    // Campaigns intentionally omitted — handled by another team from June onward.
+    activityGroups: [
+      {
+        title: 'YouTube Automation',
+        items: [
+          'Automated video generation done — 1 video launched'
+        ]
+      },
+      {
+        // Renders as one box; clicking opens the checklist modal with the three deliverables.
+        title: 'Quote Agent V1 — Done',
+        action: 'quote-agent',
+        actionLabel: 'View what shipped',
+        items: [
+          'Invoice template',
+          'Blueprint document template',
+          'Chat flow'
+        ]
+      },
+      {
+        title: 'CRO Works',
+        action: 'cro-works',
+        actionLabel: 'View completed sections',
+        items: [
+          'Home page',
+          'Header',
+          'Footer'
+        ]
+      },
+      {
+        title: 'Reports & Skills',
+        items: [
+          'Balyo report',
+          'VIH Video Skill V1'
+        ]
+      },
+      {
+        title: 'College Visits',
+        items: [
+          'Amrita College & CIT College'
         ]
       }
     ]

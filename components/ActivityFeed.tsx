@@ -44,7 +44,10 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data, isDark = true,
 
       <div className="relative border-l-2 border-dashed border-white/10 ml-5 space-y-14">
         {reversedData.length > 0 ? reversedData.map((month, idx) => {
-          const groups = (month.activityGroups || []).filter(g => !(hideActionGroups && g.action));
+          // In the quarter view, action boxes are suppressed. Groups that carry their own item
+          // list degrade to a plain list rather than vanishing; groups with nothing but an
+          // action (e.g. Tech & On-site Issues, surfaced by its own stat card) drop out.
+          const groups = (month.activityGroups || []).filter(g => !(hideActionGroups && g.action && !g.items?.length));
           const flatActivities = month.activities || [];
           const hasGroups = groups.length > 0;
           const hasActivities = hasGroups || (flatActivities.length > 0 && flatActivities[0] !== '-');
@@ -66,18 +69,20 @@ export const ActivityFeed: React.FC<ActivityFeedProps> = ({ data, isDark = true,
                 hasGroups ? (
                   <div className="space-y-8">
                     {groups.map((group, gIdx) => (
-                      group.action ? (
+                      group.action && !hideActionGroups ? (
                         <div
                           key={gIdx}
                           onClick={() => onActivityClick?.(group.action!)}
                           className="group flex items-center gap-5 p-5 rounded-[1.5rem] border border-sky-500/20 bg-sky-500/5 transition-all cursor-pointer hover:translate-x-2 hover:bg-sky-500/10 shadow-lg hover:shadow-black/40"
                         >
                           <div className="flex-shrink-0 p-2 rounded-xl bg-sky-500/10">
-                            <Wrench className="w-5 h-5 text-sky-400" />
+                            {group.actionIcon === 'wrench'
+                              ? <Wrench className="w-5 h-5 text-sky-400" />
+                              : <CheckCircle2 className="w-5 h-5 text-sky-400" />}
                           </div>
                           <div className="flex-1">
                             <span className="block text-sm font-black text-white">{group.title}</span>
-                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">View all fixes</span>
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{group.actionLabel || 'View details'}</span>
                           </div>
                           <ExternalLink className="w-4 h-4 text-sky-400 opacity-60 group-hover:opacity-100 transition-opacity" />
                         </div>
