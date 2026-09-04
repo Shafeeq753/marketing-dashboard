@@ -375,5 +375,74 @@ export const MONTHLY_DATA: MonthlyData[] = [
         ]
       }
     ]
+  },
+  {
+    // August 2026 — FY2026-27 Q2.
+    month: 'August',
+    quarter: 'Q2',
+    traffic: 5200,
+    benchmarkVideos: 0, // No benchmark videos added in August
+    totalVideosOnSite: 1340, // Unchanged from July (no benchmark videos added)
+    newsletters: 5,
+    blogs: 0, // No new blog pages published in August
+    caseStudies: 6, // 6 case studies published/revamped
+    backlinkDirectories: 25,
+    techFixes: [
+      'SSL issue fix (had caused site outage)',
+      'Spam / cyber attack on site resolved'
+    ],
+    // trafficBreakdown omitted — channel-level breakdown not provided for August.
+    // aiCrawl carried over from June — reported unchanged ("still 4k"); no updated
+    // crawler breakdown was provided for August.
+    aiCrawl: {
+      total: 4000,
+      allowed: 3000,
+      unsuccessful: 135,
+      crawlers: [
+        { name: 'ByteDance', bot: 'Bytespider', requests: 1060 },
+        { name: 'Microsoft', bot: 'BingBot', requests: 435 },
+        { name: 'Apple', bot: 'Applebot', requests: 404 },
+        { name: 'Huawei', bot: 'PetalBot', requests: 402 },
+        { name: 'Google', bot: 'Googlebot', requests: 353 },
+        { name: 'OpenAI', bot: 'ChatGPT-User', requests: 196 },
+        { name: 'Amazon', bot: 'Amazonbot', requests: 180 },
+        { name: 'Anthropic', bot: 'ClaudeBot', requests: 158 },
+        { name: 'Meta', bot: 'Meta-ExternalAgent', requests: 108 },
+        { name: 'Baidu', bot: 'Baidu', requests: 89 },
+      ],
+    },
+    googleCrawl: {
+      totalRequests: 36200,
+    },
+    // Campaigns intentionally omitted — handled by another team from June onward.
+    activityGroups: [
+      {
+        // Renders as one box in the feed; clicking opens the Tech Fixes modal with the full list.
+        title: 'Tech & On-site Issues',
+        action: 'tech-fixes',
+        actionLabel: 'View all fixes',
+        actionIcon: 'wrench'
+      },
+      {
+        // Distinct action key from July's 'cro-works' group so Q2 quarter view resolves
+        // each month's own edit list instead of always matching July's first.
+        title: 'Website CRO Works',
+        action: 'website-cro-works',
+        actionLabel: 'View completed sections',
+        items: [
+          'Revamped home page and launched it',
+          'Header & footer CRO',
+          'Published 6 case studies',
+          'EN-US pages CRO'
+        ]
+      },
+      {
+        title: 'Tools',
+        items: [
+          'VIH Tool Edit',
+          'AEO Tool — V1 completed'
+        ]
+      }
+    ]
   }
 ];
