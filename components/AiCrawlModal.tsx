@@ -7,15 +7,24 @@ interface AiCrawlModalProps {
   onClose: () => void;
   isDark: boolean;
   total: number;
-  allowed: number;
-  unsuccessful: number;
+  retrieval: number | null;
+  prevTotal: number | null;
+  prevRetrieval: number | null;
+  prevMonth?: string;
+  allowed: number | null; // null when the allowed/unsuccessful split wasn't reported
+  unsuccessful: number | null;
   crawlers: AiCrawler[];
   period: string;
 }
 
-export const AiCrawlModal: React.FC<AiCrawlModalProps> = ({ isOpen, onClose, total, allowed, unsuccessful, crawlers, period }) => {
+export const AiCrawlModal: React.FC<AiCrawlModalProps> = ({ isOpen, onClose, total, retrieval, prevTotal, prevRetrieval, prevMonth, allowed, unsuccessful, crawlers, period }) => {
   if (!isOpen) return null;
-  const rate = total > 0 ? Math.round((allowed / total) * 100) : 0;
+  const rate = allowed != null && total > 0 ? Math.round((allowed / total) * 100) : null;
+  const growth = (cur: number, prev: number | null) => {
+    if (prev == null || prev === 0) return null;
+    const d = cur - prev;
+    return `${d >= 0 ? '+' : '-'}${Math.abs(d).toLocaleString()} (${d >= 0 ? '+' : '-'}${Math.abs(Math.round((d / prev) * 100))}%) vs ${prevMonth}`;
+  };
   const maxReq = crawlers.reduce((m, c) => Math.max(m, c.requests), 0) || 1;
 
   return (
@@ -29,7 +38,7 @@ export const AiCrawlModal: React.FC<AiCrawlModalProps> = ({ isOpen, onClose, tot
             <Bot className="w-8 h-8 text-white" />
           </div>
           <h3 className="text-3xl font-black text-white uppercase tracking-tighter">AI Crawlability</h3>
-          <p className="text-[11px] font-black text-cyan-400 uppercase tracking-[0.3em] mt-2">{rate}% ALLOWED · {period}</p>
+          <p className="text-[11px] font-black text-cyan-400 uppercase tracking-[0.3em] mt-2">{rate != null ? `${rate}% ALLOWED · ` : ''}{period}</p>
 
           <button onClick={onClose} className="absolute top-10 right-10 p-3 rounded-2xl bg-white/5 text-slate-500 hover:text-white transition-colors border border-white/10 hover:bg-white/10">
             <X className="w-6 h-6" />
@@ -38,19 +47,31 @@ export const AiCrawlModal: React.FC<AiCrawlModalProps> = ({ isOpen, onClose, tot
 
         <div className="px-12 pb-12 space-y-10 max-h-[70vh] overflow-y-auto custom-scrollbar pt-8">
           {/* Summary tiles */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className={`grid gap-4 ${[true, retrieval != null, allowed != null, unsuccessful != null].filter(Boolean).length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div className="p-5 rounded-3xl bg-white/5 border border-white/10">
-              <div className="flex items-center gap-2 text-slate-500 mb-2"><Activity className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">Total</span></div>
+              <div className="flex items-center gap-2 text-slate-500 mb-2"><Activity className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">AI Crawl</span></div>
               <div className="text-3xl font-black text-white tracking-tighter">{total.toLocaleString()}</div>
+              {growth(total, prevTotal) && <div className="mt-1 text-[10px] font-black text-emerald-400">{growth(total, prevTotal)}</div>}
             </div>
-            <div className="p-5 rounded-3xl bg-emerald-500/5 border border-emerald-500/20">
-              <div className="flex items-center gap-2 text-emerald-400 mb-2"><ShieldCheck className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">Allowed</span></div>
-              <div className="text-3xl font-black text-white tracking-tighter">{allowed.toLocaleString()}</div>
-            </div>
-            <div className="p-5 rounded-3xl bg-rose-500/5 border border-rose-500/20">
-              <div className="flex items-center gap-2 text-rose-400 mb-2"><AlertTriangle className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">Unsuccessful</span></div>
-              <div className="text-3xl font-black text-white tracking-tighter">{unsuccessful.toLocaleString()}</div>
-            </div>
+            {retrieval != null && (
+              <div className="p-5 rounded-3xl bg-cyan-500/5 border border-cyan-500/20">
+                <div className="flex items-center gap-2 text-cyan-400 mb-2"><Bot className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">AI Retrieval</span></div>
+                <div className="text-3xl font-black text-white tracking-tighter">{retrieval.toLocaleString()}</div>
+                {growth(retrieval, prevRetrieval) && <div className="mt-1 text-[10px] font-black text-emerald-400">{growth(retrieval, prevRetrieval)}</div>}
+              </div>
+            )}
+            {allowed != null && (
+              <div className="p-5 rounded-3xl bg-emerald-500/5 border border-emerald-500/20">
+                <div className="flex items-center gap-2 text-emerald-400 mb-2"><ShieldCheck className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">Allowed</span></div>
+                <div className="text-3xl font-black text-white tracking-tighter">{allowed.toLocaleString()}</div>
+              </div>
+            )}
+            {unsuccessful != null && (
+              <div className="p-5 rounded-3xl bg-rose-500/5 border border-rose-500/20">
+                <div className="flex items-center gap-2 text-rose-400 mb-2"><AlertTriangle className="w-4 h-4" /><span className="text-[9px] font-black uppercase tracking-widest">Unsuccessful</span></div>
+                <div className="text-3xl font-black text-white tracking-tighter">{unsuccessful.toLocaleString()}</div>
+              </div>
+            )}
           </div>
 
           {/* Crawler breakdown */}

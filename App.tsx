@@ -20,6 +20,7 @@ import { ChecklistModal } from './components/ChecklistModal';
 import { AiCrawlModal } from './components/AiCrawlModal';
 import { BacklinksModal } from './components/BacklinksModal';
 import { MonthlySplitModal } from './components/MonthlySplitModal';
+import { SiteSpeedModal } from './components/SiteSpeedModal';
 import { AnnualOverview } from './components/AnnualOverview';
 import {
   Users,
@@ -67,6 +68,7 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     listicleBlogs: (acc.listicleBlogs || 0) + (curr.listicleBlogs || 0),
     revampedBlogs: (acc.revampedBlogs || 0) + (curr.revampedBlogs || 0),
     revampedVihPages: (acc.revampedVihPages || 0) + (curr.revampedVihPages || 0),
+    revampedPages: (acc.revampedPages || 0) + (curr.revampedPages || 0),
     internsHired: (acc.internsHired || 0) + (curr.internsHired || 0),
     backlinkDirectories: (acc.backlinkDirectories || 0) + (curr.backlinkDirectories || 0),
     backlinkGuestOutreach: (acc.backlinkGuestOutreach || 0) + (curr.backlinkGuestOutreach || 0),
@@ -100,6 +102,7 @@ const aggregateData = (data: MonthlyData[]): MonthlyData => {
     listicleBlogs: 0,
     revampedBlogs: 0,
     revampedVihPages: 0,
+    revampedPages: 0,
     internsHired: 0,
     backlinkDirectories: 0,
     backlinkGuestOutreach: 0,
@@ -137,6 +140,7 @@ const App: React.FC = () => {
   const [isAiCrawlModalOpen, setIsAiCrawlModalOpen] = useState(false);
   const [isBacklinksModalOpen, setIsBacklinksModalOpen] = useState(false);
   const [isVideoSplitModalOpen, setIsVideoSplitModalOpen] = useState(false);
+  const [isSiteSpeedModalOpen, setIsSiteSpeedModalOpen] = useState(false);
   const [checklistGroup, setChecklistGroup] = useState<{ title: string; items: string[] } | null>(null);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
 
@@ -258,11 +262,19 @@ const App: React.FC = () => {
   const formatCompact = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K` : `${n}`);
   const formatBytes = (b?: number) => (b == null ? '' : b >= 1e9 ? `${(b / 1e9).toFixed(1)} GB` : `${Math.round(b / 1e6)} MB`);
 
+  // "+33,000 (+825%)" growth line vs the previous month; null when there is no baseline.
+  const formatGrowth = (current: number, previous: number | null | undefined) => {
+    if (previous == null || previous === 0) return null;
+    const diff = current - previous;
+    const pct = Math.round((diff / previous) * 100);
+    return { up: diff >= 0, text: `${diff >= 0 ? '+' : '-'}${Math.abs(diff).toLocaleString()} (${diff >= 0 ? '+' : '-'}${Math.abs(pct)}%)` };
+  };
+
   const getTotalPages = (d: MonthlyData) =>
     d.blogs + (d.caseStudies || 0) + (d.servicePages || 0) + (d.locationPages || 0) +
     (d.faqPages || 0) + (d.glossary || 0) + (d.pricingPages || 0) + (d.vsPages || 0) +
     (d.decliningPages || 0) + (d.commercialKeywordPages || 0) + (d.exhibitorPages || 0) +
-    (d.listicleBlogs || 0) + (d.revampedBlogs || 0) + (d.revampedVihPages || 0);
+    (d.listicleBlogs || 0) + (d.revampedBlogs || 0) + (d.revampedVihPages || 0) + (d.revampedPages || 0);
 
   const currentTotalPages = getTotalPages(currentAggregates);
   const prevTotalPages = prevAggregates ? getTotalPages(prevAggregates) : null;
@@ -271,7 +283,7 @@ const App: React.FC = () => {
   const hasCampaignData = currentDataList.some(d => d.campaigns !== undefined);
 
   // Split the pages metric into newly-published vs revamped for the dual-value card.
-  const getRevampedPages = (d: MonthlyData) => (d.revampedBlogs || 0) + (d.revampedVihPages || 0);
+  const getRevampedPages = (d: MonthlyData) => (d.revampedBlogs || 0) + (d.revampedVihPages || 0) + (d.revampedPages || 0);
   const currentRevampedPages = getRevampedPages(currentAggregates);
   const currentNewPublishedPages = currentTotalPages - currentRevampedPages;
   const techFixesList = currentAggregates.techFixes || [];
@@ -286,21 +298,35 @@ const App: React.FC = () => {
   }, [selectedPeriodType, selectedValue, currentAggregates]);
 
   // AI crawler stats aggregated across the selected period (sum counts, merge crawlers, recompute rate).
+  // `allowed`/`unsuccessful` are optional per month, so the allow rate is computed only over
+  // months that reported them. Month view also carries the previous month for growth figures.
   const aiCrawlAgg = useMemo(() => {
     const months = currentDataList.filter(d => d.aiCrawl);
     if (months.length === 0) return null;
     const total = months.reduce((s, d) => s + (d.aiCrawl!.total || 0), 0);
-    const allowed = months.reduce((s, d) => s + (d.aiCrawl!.allowed || 0), 0);
-    const unsuccessful = months.reduce((s, d) => s + (d.aiCrawl!.unsuccessful || 0), 0);
+    const retrieval = months.reduce((s, d) => s + (d.aiCrawl!.retrieval || 0), 0);
+    const hasRetrieval = months.some(d => d.aiCrawl!.retrieval != null);
+    const detailed = months.filter(d => d.aiCrawl!.allowed != null);
+    const allowed = detailed.reduce((s, d) => s + (d.aiCrawl!.allowed || 0), 0);
+    const unsuccessful = detailed.reduce((s, d) => s + (d.aiCrawl!.unsuccessful || 0), 0);
+    const detailedTotal = detailed.reduce((s, d) => s + (d.aiCrawl!.total || 0), 0);
     const map = new Map<string, { name: string; bot?: string; requests: number }>();
     months.forEach(d => d.aiCrawl!.crawlers?.forEach(c => {
       const e = map.get(c.name);
       if (e) e.requests += c.requests; else map.set(c.name, { ...c });
     }));
     const crawlers = Array.from(map.values()).sort((a, b) => b.requests - a.requests);
-    const rate = total > 0 ? Math.round((allowed / total) * 100) : 0;
-    return { total, allowed, unsuccessful, crawlers, rate };
-  }, [currentDataList]);
+    const rate = detailedTotal > 0 ? Math.round((allowed / detailedTotal) * 100) : null;
+    const prev = selectedPeriodType === 'month' && selectedMonthIdx > 0 ? MONTHLY_DATA[selectedMonthIdx - 1].aiCrawl : undefined;
+    const prevMonth = selectedPeriodType === 'month' && selectedMonthIdx > 0 ? MONTHLY_DATA[selectedMonthIdx - 1].month : undefined;
+    return {
+      total, allowed, unsuccessful, crawlers, rate, detailed: detailed.length > 0,
+      retrieval: hasRetrieval ? retrieval : null,
+      prevTotal: prev?.total ?? null,
+      prevRetrieval: prev?.retrieval ?? null,
+      prevMonth,
+    };
+  }, [currentDataList, selectedPeriodType, selectedMonthIdx]);
 
   // Google Search Console crawl stats: sum requests + bytes, average the response time.
   const googleCrawlAgg = useMemo(() => {
@@ -310,8 +336,10 @@ const App: React.FC = () => {
     const downloadBytes = months.reduce((s, d) => s + (d.googleCrawl!.downloadBytes || 0), 0);
     const respMonths = months.filter(d => d.googleCrawl!.avgResponseMs != null);
     const avgResponseMs = respMonths.length ? Math.round(respMonths.reduce((s, d) => s + (d.googleCrawl!.avgResponseMs || 0), 0) / respMonths.length) : undefined;
-    return { totalRequests, downloadBytes, avgResponseMs };
-  }, [currentDataList]);
+    const prevGoogle = selectedPeriodType === 'month' && selectedMonthIdx > 0 ? MONTHLY_DATA[selectedMonthIdx - 1].googleCrawl : undefined;
+    const prevMonth = prevGoogle ? MONTHLY_DATA[selectedMonthIdx - 1].month : undefined;
+    return { totalRequests, downloadBytes, avgResponseMs, prevRequests: prevGoogle?.totalRequests ?? null, prevMonth };
+  }, [currentDataList, selectedPeriodType, selectedMonthIdx]);
 
   const trafficTrend = calculateTrend(trafficDisplayValue, trafficPrevValue);
   const videoTrend = calculateTrend(currentAggregates.benchmarkVideos, prevAggregates?.benchmarkVideos);
@@ -337,6 +365,8 @@ const App: React.FC = () => {
     const act = activity.toLowerCase();
     if (act === 'tech-fixes') {
       setIsTechModalOpen(true);
+    } else if (act === 'site-speed') {
+      setIsSiteSpeedModalOpen(true);
     } else if (act.includes('indexing issues') || act.includes('website issues')) {
       setIsCrawlModalOpen(true);
     } else if (act.includes('website edits')) {
@@ -503,12 +533,31 @@ const App: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
                 <StatCard title="Total Traffic" value={trafficDisplayValue.toLocaleString()} subValue={trafficPrevValue ? `vs prev period: ${trafficPrevValue.toLocaleString()}` : undefined} icon={<Users className="w-6 h-6" />} colorClass="text-slate-400" trend={trafficTrend.trend} trendValue={trafficTrend.value} isDark={true} isClickable={true} onClick={() => setIsTrafficModalOpen(true)} />
-                {aiCrawlAgg && (
-                  <StatCard title="AI Crawl Requests" value={aiCrawlAgg.total.toLocaleString()} subValue={`${aiCrawlAgg.allowed.toLocaleString()} allowed · ${aiCrawlAgg.rate}%`} icon={<Bot className="w-6 h-6" />} colorClass="text-cyan-400" isDark={true} isClickable={true} onClick={() => setIsAiCrawlModalOpen(true)} />
-                )}
-                {googleCrawlAgg && (
-                  <StatCard title="Google Crawl Rate" value={formatCompact(googleCrawlAgg.totalRequests)} subValue={`${formatBytes(googleCrawlAgg.downloadBytes)}${googleCrawlAgg.avgResponseMs != null ? ` · ${googleCrawlAgg.avgResponseMs}ms avg` : ''}`} icon={<Gauge className="w-6 h-6" />} colorClass="text-blue-400" isDark={true} />
-                )}
+                {aiCrawlAgg && (() => {
+                  const crawlGrowth = formatGrowth(aiCrawlAgg.total, aiCrawlAgg.prevTotal);
+                  const retrievalGrowth = aiCrawlAgg.retrieval != null ? formatGrowth(aiCrawlAgg.retrieval, aiCrawlAgg.prevRetrieval) : null;
+                  const half = (label: string, n: number, g: ReturnType<typeof formatGrowth>) => (
+                    <div className="flex flex-col">
+                      <span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">{label}</span>
+                      <span className="text-2xl font-black text-white">{formatCompact(n)}</span>
+                      {g && <span className={`mt-1 text-[10px] font-black tracking-tight ${g.up ? 'text-emerald-400' : 'text-rose-400'}`}>{g.text}</span>}
+                    </div>
+                  );
+                  return (
+                    <StatCard
+                      title="AI Requests"
+                      value={<div className="flex items-start gap-8 mt-1">{half('AI Crawl', aiCrawlAgg.total, crawlGrowth)}{aiCrawlAgg.retrieval != null && half('AI Retrieval', aiCrawlAgg.retrieval, retrievalGrowth)}</div>}
+                      subValue={aiCrawlAgg.prevMonth && (crawlGrowth || retrievalGrowth) ? `Growth vs ${aiCrawlAgg.prevMonth}` : aiCrawlAgg.detailed ? `${aiCrawlAgg.allowed.toLocaleString()} allowed · ${aiCrawlAgg.rate}%` : undefined}
+                      icon={<Bot className="w-6 h-6" />} colorClass="text-cyan-400" isDark={true} isClickable={true} onClick={() => setIsAiCrawlModalOpen(true)}
+                    />
+                  );
+                })()}
+                {googleCrawlAgg && (() => {
+                  const g = formatGrowth(googleCrawlAgg.totalRequests, googleCrawlAgg.prevRequests);
+                  const t = calculateTrend(googleCrawlAgg.totalRequests, googleCrawlAgg.prevRequests);
+                  const extra = `${formatBytes(googleCrawlAgg.downloadBytes)}${googleCrawlAgg.avgResponseMs != null ? ` · ${googleCrawlAgg.avgResponseMs}ms avg` : ''}`;
+                  return <StatCard title="Google Crawl Rate" value={formatCompact(googleCrawlAgg.totalRequests)} subValue={g ? `${g.text} vs ${googleCrawlAgg.prevMonth}` : extra || undefined} trend={g ? t.trend : undefined} trendValue={g ? t.value : undefined} icon={<Gauge className="w-6 h-6" />} colorClass="text-blue-400" isDark={true} />;
+                })()}
                 <StatCard title="Benchmark Videos" value={currentAggregates.benchmarkVideos} subValue={`Total on site: ${currentAggregates.totalVideosOnSite}`} icon={<Video className="w-6 h-6" />} colorClass="text-amber-500" trend={videoTrend.trend} trendValue={videoTrend.value} isDark={true} isClickable={selectedPeriodType === 'quarter'} onClick={() => setIsVideoSplitModalOpen(true)} />
                 <StatCard title="Published / Revamped Pages" value={<div className="flex items-center gap-8 mt-1"><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Published</span><span className="text-2xl font-black text-white">{currentNewPublishedPages}</span></div><div className="flex flex-col"><span className="text-[9px] uppercase font-black tracking-[0.1em] mb-1.5 text-slate-500">Revamped</span><span className="text-2xl font-black text-white">{currentRevampedPages}</span></div></div>} subValue={`Total: ${currentTotalPages}`} icon={<Layers className="w-6 h-6" />} colorClass="text-yellow-500" trend={blogTrend.trend} trendValue={blogTrend.value} isDark={true} isClickable={true} onClick={() => setIsModalOpen(true)} />
                 {hasCampaignData && (
@@ -565,8 +614,9 @@ const App: React.FC = () => {
       <MonthlySplitModal isOpen={isVideoSplitModalOpen} onClose={() => setIsVideoSplitModalOpen(false)} isDark={true} title="Benchmark Videos" period={selectedValue} data={currentDataList.map(d => ({ month: d.month, value: d.benchmarkVideos }))} accentHex="#fbbf24" />
       <SecurityModal isOpen={isSecurityModalOpen} onClose={() => setIsSecurityModalOpen(false)} isDark={true} />
       <TechFixesModal isOpen={isTechModalOpen} onClose={() => setIsTechModalOpen(false)} isDark={true} fixes={techFixesList} period={selectedValue} />
+      <SiteSpeedModal isOpen={isSiteSpeedModalOpen} onClose={() => setIsSiteSpeedModalOpen(false)} isDark={true} period={selectedValue} />
       <ChecklistModal isOpen={checklistGroup !== null} onClose={() => setChecklistGroup(null)} isDark={true} title={checklistGroup?.title ?? ''} items={checklistGroup?.items ?? []} period={selectedValue} />
-      <AiCrawlModal isOpen={isAiCrawlModalOpen} onClose={() => setIsAiCrawlModalOpen(false)} isDark={true} total={aiCrawlAgg?.total ?? 0} allowed={aiCrawlAgg?.allowed ?? 0} unsuccessful={aiCrawlAgg?.unsuccessful ?? 0} crawlers={aiCrawlAgg?.crawlers ?? []} period={selectedValue} />
+      <AiCrawlModal isOpen={isAiCrawlModalOpen} onClose={() => setIsAiCrawlModalOpen(false)} isDark={true} total={aiCrawlAgg?.total ?? 0} retrieval={aiCrawlAgg?.retrieval ?? null} prevTotal={aiCrawlAgg?.prevTotal ?? null} prevRetrieval={aiCrawlAgg?.prevRetrieval ?? null} prevMonth={aiCrawlAgg?.prevMonth} allowed={aiCrawlAgg?.detailed ? aiCrawlAgg.allowed : null} unsuccessful={aiCrawlAgg?.detailed ? aiCrawlAgg.unsuccessful : null} crawlers={aiCrawlAgg?.crawlers ?? []} period={selectedValue} />
       <BacklinksModal isOpen={isBacklinksModalOpen} onClose={() => setIsBacklinksModalOpen(false)} isDark={true} directories={backlinkView.directories} guestOutreach={backlinkView.guestOutreach} collaborations={backlinkView.collaborations} period={selectedValue} />
 
       {/* Content Deep Dive Modal */}
@@ -613,6 +663,7 @@ const App: React.FC = () => {
                     { label: 'LISTICLE BLOGS', value: (currentAggregates as any).listicleBlogs || 0, icon: <FileText className="w-4 h-4" /> },
                     { label: 'REVAMPED BLOGS', value: (currentAggregates as any).revampedBlogs || 0, icon: <FileText className="w-4 h-4" /> },
                     { label: 'REVAMPED VIH PAGES', value: (currentAggregates as any).revampedVihPages || 0, icon: <MonitorPlay className="w-4 h-4" /> },
+                    { label: 'REVAMPED PAGES', value: (currentAggregates as any).revampedPages || 0, icon: <LayoutGrid className="w-4 h-4" /> },
                   ].filter(item => item.value > 0).map((item, i) => (
                     <div key={i} className="p-5 rounded-3xl bg-white/5 border border-white/10 flex flex-col justify-between h-28 group hover:bg-white/10 transition-colors">
                       <div className="flex justify-between items-start">
@@ -641,7 +692,8 @@ const App: React.FC = () => {
                      ((currentAggregates as any).exhibitorPages || 0) +
                      ((currentAggregates as any).listicleBlogs || 0) +
                      ((currentAggregates as any).revampedBlogs || 0) +
-                     ((currentAggregates as any).revampedVihPages || 0)}
+                     ((currentAggregates as any).revampedVihPages || 0) +
+                     ((currentAggregates as any).revampedPages || 0)}
                    </span>
                 </div>
               </section>

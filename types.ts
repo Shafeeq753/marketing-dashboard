@@ -18,9 +18,10 @@ export interface AiCrawler {
 }
 
 export interface AiCrawlStats {
-  total: number;
-  allowed: number;
-  unsuccessful: number;
+  total: number; // AI crawl requests
+  allowed?: number; // Omitted when the month's allowed/unsuccessful split wasn't reported
+  unsuccessful?: number;
+  retrieval?: number; // AI retrieval (answer-retrieval) requests
   crawlers?: AiCrawler[];
 }
 
@@ -60,6 +61,7 @@ export interface MonthlyData {
   listicleBlogs?: number;
   revampedBlogs?: number; // Existing blog pages revamped (not newly published)
   revampedVihPages?: number; // Existing VIH pages revamped
+  revampedPages?: number; // Other existing site pages revamped (e.g. home page, industry pages)
   internsHired?: number; // Hiring & training — interns onboarded
   backlinkDirectories?: number; // Backlink directories added
   backlinkGuestOutreach?: number; // Guest outreach for backlinks

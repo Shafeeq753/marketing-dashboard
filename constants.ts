@@ -398,6 +398,7 @@ export const MONTHLY_DATA: MonthlyData[] = [
       total: 4000,
       allowed: 3000,
       unsuccessful: 135,
+      retrieval: 1400, // approximate ("~1.4k") — baseline for September's growth
       crawlers: [
         { name: 'ByteDance', bot: 'Bytespider', requests: 1060 },
         { name: 'Microsoft', bot: 'BingBot', requests: 435 },
@@ -441,6 +442,72 @@ export const MONTHLY_DATA: MonthlyData[] = [
         items: [
           'VIH Tool Edit',
           'AEO Tool — V1 completed'
+        ]
+      }
+    ]
+  },
+  {
+    // September 2026 — FY2026-27 Q2 (last month of the quarter).
+    month: 'September',
+    quarter: 'Q2',
+    traffic: 5500,
+    benchmarkVideos: 0, // No benchmark videos added in September
+    totalVideosOnSite: 1340, // Unchanged from August
+    newsletters: 4, // 3 weekly newsletters + 1 anniversary newsletter
+    blogs: 0,
+    revampedPages: 2, // Home page revamp + Warehouse industry page revamp
+    backlinkDirectories: 0, // No backlinks acquired
+    techFixes: [
+      'VIH Chatbot edits',
+      'Ahrefs page edits',
+      'Case study video playing issues',
+      'Falcon case study issue',
+      'VIH single listing layout issue',
+      'Recaptcha in home page',
+      'Exit content popup'
+    ],
+    // trafficBreakdown omitted — channel-level breakdown not provided for September.
+    // Only the request totals were reported (no allowed/unsuccessful split or crawler list).
+    aiCrawl: {
+      total: 37000, // AI crawl requests
+      retrieval: 6000, // AI retrieval requests
+    },
+    googleCrawl: {
+      totalRequests: 33100,
+    },
+    // Campaigns intentionally omitted — handled by another team from June onward.
+    activityGroups: [
+      {
+        // Opens the before/after PageSpeed modal.
+        title: 'Site Speed Issue',
+        action: 'site-speed',
+        actionLabel: 'View before / after',
+        actionIcon: 'wrench'
+      },
+      {
+        title: 'Website',
+        items: [
+          'Launched Quote Agent & Interlinked',
+          'Launched Warehouse Service Page'
+        ]
+      },
+      {
+        title: 'Tools',
+        items: [
+          'AEO tool — 3 modules (Indexing, Traffic, Backlinks)',
+          'Script generator tool'
+        ]
+      },
+      {
+        title: 'Visits',
+        items: [
+          'CIT visit to company'
+        ]
+      },
+      {
+        title: 'Newsletter',
+        items: [
+          'Anniversary newsletter sent'
         ]
       }
     ]
